@@ -1,0 +1,222 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 213 72% 16%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 213 72% 16%;
+ 
+    --popover: 0 0% 100%;
+    --popover-foreground: 213 72% 16%;
+ 
+    --primary: 212 72% 26%;
+    --primary-foreground: 0 0% 100%;
+ 
+    --secondary: 215 66% 22%;
+    --secondary-foreground: 0 0% 100%;
+ 
+    --muted: 209 32% 66%;
+    --muted-foreground: 215 66% 22%;
+ 
+    --accent: 209 72% 26%;
+    --accent-foreground: 0 0% 100%;
+ 
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+ 
+    --border: 209 32% 66%;
+    --input: 209 32% 66%;
+    --ring: 212 72% 26%;
+ 
+    --radius: 0.5rem;
+  }
+ 
+  .dark {
+    --background: 213 72% 16%;
+    --foreground: 111 24% 94%;
+ 
+    --card: 213 72% 16%;
+    --card-foreground: 111 24% 94%;
+ 
+    --popover: 213 72% 16%;
+    --popover-foreground: 111 24% 94%;
+ 
+    --primary: 212 72% 26%;
+    --primary-foreground: 111 24% 94%;
+ 
+    --secondary: 215 66% 22%;
+    --secondary-foreground: 111 24% 94%;
+ 
+    --muted: 209 32% 66%;
+    --muted-foreground: 111 24% 94%;
+ 
+    --accent: 209 72% 26%;
+    --accent-foreground: 0 0% 100%;
+ 
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 111 24% 94%;
+
+    --success: 142 76% 36%;
+    --success-foreground: 111 24% 94%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 111 24% 94%;
+ 
+    --border: 209 32% 66%;
+    --input: 209 32% 66%;
+    --ring: 212 72% 26%;
+  }
+}
+ 
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Styles existants */
+body {
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: white;
+  color: #0f172a;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.3s ease-out;
+}
+
+.dmt-bg-gradient {
+  @apply bg-gradient-to-br from-yale-blue via-berkeley-blue to-oxford-blue;
+}
+
+.sidebar {
+  @apply bg-white border-r border-powder-blue/30;
+}
+
+.sidebar-header {
+  @apply p-4 border-b border-powder-blue/30;
+}
+
+.sidebar-link {
+  @apply flex items-center gap-3 rounded-lg px-4 py-2.5 text-oxford-blue transition-all hover:bg-powder-blue/20;
+}
+
+.sidebar-link.active {
+  @apply bg-yale-blue text-white font-medium;
+}
+
+.sidebar-icon {
+  @apply text-berkeley-blue;
+}
+
+.sidebar-link.active .sidebar-icon {
+  @apply text-white;
+}
+
+.sidebar-link:hover .sidebar-icon {
+  @apply text-yale-blue;
+}
+
+.sidebar-section-title {
+  @apply px-4 py-2 text-sm font-medium text-berkeley-blue/70 uppercase tracking-wider;
+}
+
+.sidebar-divider {
+  @apply my-2 border-t border-powder-blue/30;
+}
+
+.dashboard-card {
+  @apply rounded-xl border bg-white p-6 shadow-sm transition-all hover:shadow-md;
+}
+
+.chart-container {
+  @apply rounded-xl border bg-white p-4 shadow-sm;
+}
+
+/* Styles pour les pastilles d'événements */
+.event-dot {
+  @apply h-2 w-2 rounded-full;
+}
+
+.event-dot-mission {
+  @apply bg-yale-blue;
+}
+
+.event-dot-formation {
+  @apply bg-berkeley-blue;
+}
+
+.event-dot-reunion {
+  @apply bg-oxford-blue;
+}
+
+.event-dot-autre {
+  @apply bg-powder-blue;
+}
+
+/* Animation pour les nouveaux événements */
+@keyframes eventPulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.new-event {
+  animation: eventPulse 2s infinite;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    @apply fixed -left-64 top-0 z-40 h-full w-64 transition-all duration-300;
+  }
+
+  .sidebar.active {
+    @apply left-0;
+  }
+
+  .mobile-overlay {
+    @apply fixed inset-0 z-30 bg-black/50;
+  }
+}
+
+@layer utilities {
+  .text-gray-400 {
+    color: hsl(var(--accent)) !important;
+  }
+}

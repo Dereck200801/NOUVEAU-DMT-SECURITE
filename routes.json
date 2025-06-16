@@ -1,0 +1,5 @@
+{
+  "/api/events": "/events",
+  "/api/events/:id": "/events/:id",
+  "/api/events/month/:year/:month": "/events?date_like=^:year-:month"
+} 

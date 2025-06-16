@@ -1,0 +1,144 @@
+{
+  "events": [
+    {
+      "id": 1,
+      "title": "Réunion équipe",
+      "date": "2023-09-15",
+      "time": "10:00",
+      "type": "reunion",
+      "description": "Réunion hebdomadaire de l'équipe",
+      "location": "Salle de conférence A",
+      "participants": ["John Doe", "Jane Smith"]
+    },
+    {
+      "id": 2,
+      "title": "Formation sécurité",
+      "date": "2023-09-20",
+      "time": "14:00",
+      "type": "formation",
+      "description": "Formation sur les nouvelles procédures de sécurité",
+      "location": "Salle de formation B",
+      "participants": ["John Doe", "Alice Johnson"]
+    },
+    {
+      "id": 8,
+      "title": "Formation avancée",
+      "date": "2025-06-05",
+      "time": "09:00",
+      "type": "formation",
+      "description": "Formation avancée sur les nouvelles technologies",
+      "location": "Salle de formation A",
+      "participants": ["Équipe technique"]
+    },
+    {
+      "id": 9,
+      "title": "Mission client important",
+      "date": "2025-06-10",
+      "time": "10:30",
+      "type": "mission",
+      "description": "Intervention chez un client important",
+      "location": "Client VIP, Paris",
+      "participants": ["Équipe senior"]
+    },
+    {
+      "id": 10,
+      "title": "Réunion stratégique",
+      "date": "2025-06-15",
+      "time": "14:00",
+      "type": "reunion",
+      "description": "Réunion stratégique semestrielle",
+      "location": "Salle du conseil",
+      "participants": ["Direction", "Managers"]
+    },
+    {
+      "id": 11,
+      "title": "Conférence sécurité",
+      "date": "2025-06-20",
+      "time": "09:00",
+      "type": "autre",
+      "description": "Conférence annuelle sur la cybersécurité",
+      "location": "Centre de conférences",
+      "participants": ["Toute l'entreprise"]
+    },
+    {
+      "id": 12,
+      "title": "Audit interne",
+      "date": "2025-06-01",
+      "time": "08:30",
+      "type": "mission",
+      "description": "Audit interne des systèmes",
+      "location": "Siège social",
+      "participants": ["Équipe audit"]
+    },
+    {
+      "id": 13,
+      "title": "Réunion clients",
+      "date": "2025-06-03",
+      "time": "11:00",
+      "type": "reunion",
+      "description": "Présentation des nouveaux services",
+      "location": "Salle de réunion B",
+      "participants": ["Équipe commerciale", "Direction"]
+    },
+    {
+      "id": 14,
+      "title": "Formation RGPD",
+      "date": "2025-06-08",
+      "time": "14:30",
+      "type": "formation",
+      "description": "Mise à jour sur les règles RGPD",
+      "location": "Salle de formation C",
+      "participants": ["Tous les employés"]
+    },
+    {
+      "id": 15,
+      "title": "Mission d'urgence",
+      "date": "2025-06-12",
+      "time": "07:00",
+      "type": "mission",
+      "description": "Intervention d'urgence chez un client",
+      "location": "Client ABC, Lyon",
+      "participants": ["Équipe intervention"]
+    },
+    {
+      "id": 16,
+      "title": "Webinaire sécurité",
+      "date": "2025-06-18",
+      "time": "16:00",
+      "type": "formation",
+      "description": "Webinaire sur les dernières menaces",
+      "location": "En ligne",
+      "participants": ["Clients", "Partenaires"]
+    },
+    {
+      "id": 17,
+      "title": "Réunion budget",
+      "date": "2025-06-25",
+      "time": "10:00",
+      "type": "reunion",
+      "description": "Planification budgétaire Q3",
+      "location": "Salle du conseil",
+      "participants": ["Direction", "Finances"]
+    },
+    {
+      "id": 18,
+      "title": "Mission maintenance",
+      "date": "2025-06-28",
+      "time": "09:00",
+      "type": "mission",
+      "description": "Maintenance préventive systèmes",
+      "location": "Datacenter",
+      "participants": ["Équipe technique"]
+    },
+    {
+      "id": 19,
+      "title": "Team building",
+      "date": "2025-06-30",
+      "time": "14:00",
+      "type": "autre",
+      "description": "Activité team building mensuelle",
+      "location": "Parc aventure",
+      "participants": ["Toute l'entreprise"]
+    }
+  ]
+} 
