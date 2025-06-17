@@ -5,6 +5,10 @@ import { useShifts } from '../context/ShiftContext';
 import { useEmployees } from '../context/EmployeeContext';
 import ShiftForm from '../components/ShiftForm';
 import type { Shift, NewShift } from '../types/shift';
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import interactionPlugin from '@fullcalendar/interaction';
 
 const Planning: React.FC = () => {
   const { shifts, add, update, remove } = useShifts();
@@ -40,6 +44,30 @@ const Planning: React.FC = () => {
       cancelled: 'bg-danger/20 text-danger',
     };
     return <span className={`${map[status]} text-xs rounded-full px-3 py-1 capitalize`}>{status}</span>;
+  };
+
+  const statusColorMap: Record<Shift['status'], string> = {
+    planned: '#134074',
+    completed: '#4CAF50',
+    cancelled: '#F44336',
+  };
+
+  const getCalendarEvents = () =>
+    shifts.map((shift) => {
+      const emp = employees.find((e) => e.id === shift.employeeId);
+      return {
+        id: String(shift.id),
+        title: emp ? `${emp.name} (${shift.location})` : shift.location,
+        start: `${shift.date}T${shift.startTime}:00`,
+        end: `${shift.date}T${shift.endTime}:00`,
+        color: statusColorMap[shift.status],
+      };
+    });
+
+  const handleEventClick = (arg: any) => {
+    const shiftId = Number(arg.event.id);
+    const sh = shifts.find((s) => s.id === shiftId);
+    if (sh) openEdit(sh);
   };
 
   return (
@@ -118,6 +146,28 @@ const Planning: React.FC = () => {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Calendar */}
+      <div className="mt-8 bg-white rounded-2xl shadow-lg p-6">
+        <FullCalendar
+          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+          initialView="dayGridMonth"
+          headerToolbar={{
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay',
+          }}
+          events={getCalendarEvents()}
+          locale="fr"
+          height="auto"
+          eventTimeFormat={{
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+          }}
+          eventClick={handleEventClick}
+        />
       </div>
 
       {modal.mode && (

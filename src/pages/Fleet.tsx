@@ -5,6 +5,8 @@ import { useVehicles } from '../context/VehicleContext';
 import { useEmployees } from '../context/EmployeeContext';
 import VehicleForm from '../components/VehicleForm';
 import type { Vehicle, NewVehicle } from '../types/vehicle';
+import { Button } from '../components/ui/button';
+import { Badge } from '../components/ui/badge';
 
 const FleetPage: React.FC = () => {
   const { vehicles, add, update, remove } = useVehicles();
@@ -36,22 +38,29 @@ const FleetPage: React.FC = () => {
   });
 
   const statusBadge = (status: Vehicle['status']) => {
-    const map: Record<Vehicle['status'], string> = {
-      available: 'bg-success/20 text-success',
-      assigned: 'bg-accent/20 text-accent',
-      maintenance: 'bg-warning/20 text-warning',
-      out_of_service: 'bg-danger/20 text-danger',
-    };
-    return <span className={`${map[status]} text-xs rounded-full px-3 py-1 capitalize`}>{status.replace(/_/g,' ')}</span>;
+    const map: Record<
+      Vehicle['status'],
+      'success' | 'secondary' | 'warning' | 'destructive'
+    > = {
+      available: 'success',
+      assigned: 'secondary',
+      maintenance: 'warning',
+      out_of_service: 'destructive',
+    } as const;
+    return (
+      <Badge variant={map[status]} className="capitalize">
+        {status.replace(/_/g, ' ')}
+      </Badge>
+    );
   };
 
   return (
     <div>
       <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <h1 className="text-2xl font-bold">Gestion de la Flotte</h1>
-        <button onClick={openCreate} className="bg-yale-blue hover:bg-berkeley-blue text-white py-2 px-4 rounded-lg flex items-center">
-          <FontAwesomeIcon icon={faPlus} className="mr-2" /> Nouveau véhicule
-        </button>
+        <Button onClick={openCreate} className="gap-2 bg-yale-blue hover:bg-berkeley-blue text-white">
+          <FontAwesomeIcon icon={faPlus} /> Nouveau véhicule
+        </Button>
       </div>
 
       {/* Filtres */}
@@ -79,14 +88,14 @@ const FleetPage: React.FC = () => {
       {/* Tableau */}
       <div className="bg-white rounded-2xl shadow-lg overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-light text-sm text-gray-500">
+          <thead className="bg-gradient-to-r from-yale-blue to-berkeley-blue text-sm text-white">
             <tr>
               <th className="text-left py-3 px-6 font-medium">Véhicule</th>
               <th className="text-left py-3 px-6 font-medium">Immatriculation</th>
               <th className="text-left py-3 px-6 font-medium">Statut</th>
-              <th className="text-left py-3 px-6 font-medium">Assigné à</th>
-              <th className="text-left py-3 px-6 font-medium">Km</th>
-              <th className="text-left py-3 px-6 font-medium">Dernier entretien</th>
+              <th className="text-left py-3 px-6 font-medium hidden sm:table-cell">Assigné à</th>
+              <th className="text-left py-3 px-6 font-medium hidden lg:table-cell">Km</th>
+              <th className="text-left py-3 px-6 font-medium hidden lg:table-cell">Dernier entretien</th>
               <th className="text-left py-3 px-6 font-medium">Actions</th>
             </tr>
           </thead>
@@ -94,16 +103,16 @@ const FleetPage: React.FC = () => {
             {filtered.map((v) => {
               const emp = employees.find((e) => e.id === v.assignedTo);
               return (
-                <tr key={v.id} className="border-b border-gray-100 hover:bg-gray-50 text-sm">
-                  <td className="py-3 px-6 flex items-center gap-2">
+                <tr key={v.id} className="border-b border-gray-100 hover:bg-gray-50 text-sm odd:bg-gray-50">
+                  <td className="py-2.5 md:px-6 flex items-center gap-2">
                     <FontAwesomeIcon icon={faCarSide} className="text-gray-400" /> {v.make} {v.model}
                   </td>
-                  <td className="py-3 px-6">{v.plate}</td>
-                  <td className="py-3 px-6">{statusBadge(v.status)}</td>
-                  <td className="py-3 px-6">{emp ? emp.name : '—'}</td>
-                  <td className="py-3 px-6">{v.mileage?.toLocaleString()} km</td>
-                  <td className="py-3 px-6">{v.lastServiceDate}</td>
-                  <td className="py-3 px-6">
+                  <td className="py-2.5 md:px-6">{v.plate}</td>
+                  <td className="py-2.5 md:px-6">{statusBadge(v.status)}</td>
+                  <td className="py-2.5 md:px-6 hidden sm:table-cell">{emp ? emp.name : '—'}</td>
+                  <td className="py-2.5 md:px-6 hidden lg:table-cell">{v.mileage?.toLocaleString()} km</td>
+                  <td className="py-2.5 md:px-6 hidden lg:table-cell">{v.lastServiceDate}</td>
+                  <td className="py-2.5 md:px-6">
                     <button onClick={() => openEdit(v)} className="text-yale-blue hover:text-berkeley-blue mr-3">
                       <FontAwesomeIcon icon={faEdit} />
                     </button>
