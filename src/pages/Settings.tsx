@@ -9,7 +9,8 @@ import {
   faPalette,
   faUserShield,
   faKey,
-  faTrash
+  faTrash,
+  faUsers
 } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../context/AuthContext';
 import { ToastContainer, toast } from 'react-toastify';
@@ -18,6 +19,9 @@ import { userService } from '../services/userService';
 import { companyService } from '../services/companyService';
 import { ProfileFormData, NotificationSettings, PasswordFormData } from '../types/user';
 import { CompanyFormData } from '../types/company';
+import { AuthUser } from '../context/AuthContext';
+import { Role, AccreditationLevel, ROLE_PERMISSIONS } from '../auth/rbac';
+import { Permission } from '../auth/rbac';
 
 const Settings: React.FC = () => {
   const { user, updateUserProfile, isLoading: isAuthLoading } = useAuth();
@@ -126,6 +130,66 @@ const Settings: React.FC = () => {
 
   // Integrations – dummy API keys list
   const [apiKeys, setApiKeys] = useState<{ id: string; key: string }[]>([]);
+
+  /**
+   * Gestion des utilisateurs (uniquement admin).
+   * Les utilisateurs sont stockés dans localStorage sous la clé "appUsers".
+   */
+  const [users, setUsers] = useState<AuthUser[]>([]);
+  const [newUser, setNewUser] = useState({
+    name: '',
+    email: '',
+    role: 'agent' as Role,
+    accreditation: 'basic' as AccreditationLevel,
+    password: '',
+    permissions: [...ROLE_PERMISSIONS['agent']] as Permission[],
+  });
+
+  // Load users list on mount
+  useEffect(() => {
+    const stored = localStorage.getItem('appUsers');
+    if (stored) {
+      setUsers(JSON.parse(stored));
+    } else {
+      // Seed with current user if admin
+      if (user && user.role === 'admin') {
+        localStorage.setItem('appUsers', JSON.stringify([user]));
+        setUsers([user]);
+      }
+    }
+  }, []);
+
+  const persistUsers = (list: AuthUser[]) => {
+    setUsers(list);
+    localStorage.setItem('appUsers', JSON.stringify(list));
+  };
+
+  const handleAddUser = () => {
+    if (!newUser.name || !newUser.email || !newUser.password) return;
+    const created: AuthUser = {
+      id: Date.now().toString(),
+      name: newUser.name,
+      email: newUser.email,
+      role: newUser.role,
+      accreditation: newUser.accreditation,
+      permissions: newUser.permissions,
+      language: 'fr',
+      notification_settings: defaultNotificationSettings,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      pwd: newUser.password,
+    } as AuthUser;
+    const updated = [...users, created];
+    persistUsers(updated);
+    setNewUser({ name: '', email: '', role: 'agent', accreditation: 'basic', password: '', permissions: [...ROLE_PERMISSIONS['agent']] });
+    toast.success('Utilisateur ajouté');
+  };
+
+  const handleDeleteUser = (id: string) => {
+    const updated = users.filter(u => u.id !== id);
+    persistUsers(updated);
+    toast.success('Utilisateur supprimé');
+  };
 
   // Load preferences, 2FA and API keys (placeholders for real API calls)
   useEffect(() => {
@@ -741,6 +805,115 @@ const Settings: React.FC = () => {
           </div>
         );
         
+      case 'users':
+        return user?.role !== 'admin' ? null : (
+          <div>
+            <h2 className="text-base font-semibold mb-4">Gestion des utilisateurs</h2>
+            {/* Liste */}
+            <table className="w-full text-sm mb-6">
+              <thead>
+                <tr className="text-left border-b">
+                  <th className="py-2">Nom</th>
+                  <th>Email</th>
+                  <th>Rôle</th>
+                  <th>Accréditation</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map(u => (
+                  <tr key={u.id} className="border-b hover:bg-gray-50">
+                    <td className="py-2">{u.name}</td>
+                    <td>{u.email}</td>
+                    <td>{u.role}</td>
+                    <td>{u.accreditation}</td>
+                    <td>
+                      {u.id !== user.id && (
+                        <button onClick={() => handleDeleteUser(u.id)} className="text-red-600 text-xs">
+                          Supprimer
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* Ajout */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h3 className="font-medium mb-2">Ajouter un utilisateur</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input
+                  placeholder="Nom"
+                  className="border border-gray-300 rounded px-3 py-2"
+                  value={newUser.name}
+                  onChange={e => setNewUser({ ...newUser, name: e.target.value })}
+                />
+                <input
+                  placeholder="Email"
+                  className="border border-gray-300 rounded px-3 py-2"
+                  value={newUser.email}
+                  onChange={e => setNewUser({ ...newUser, email: e.target.value })}
+                />
+                <select
+                  value={newUser.role}
+                  onChange={e => {
+                    const r = e.target.value as Role;
+                    setNewUser({ ...newUser, role: r, permissions: [...ROLE_PERMISSIONS[r]] });
+                  }}
+                  className="border border-gray-300 rounded px-3 py-2"
+                >
+                  <option value="agent">Agent</option>
+                  <option value="supervisor">Superviseur</option>
+                  <option value="admin">Admin</option>
+                </select>
+                <select
+                  value={newUser.accreditation}
+                  onChange={e => setNewUser({ ...newUser, accreditation: e.target.value as AccreditationLevel })}
+                  className="border border-gray-300 rounded px-3 py-2"
+                >
+                  <option value="basic">Basic</option>
+                  <option value="intermediate">Intermédiaire</option>
+                  <option value="advanced">Avancé</option>
+                </select>
+                <input
+                  placeholder="Mot de passe"
+                  type="password"
+                  className="border border-gray-300 rounded px-3 py-2"
+                  value={newUser.password}
+                  onChange={e => setNewUser({ ...newUser, password: e.target.value })}
+                />
+                <div className="md:col-span-2">
+                  <p className="text-sm font-medium mb-2">Modules autorisés</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                    {Object.values(Permission).map((perm) => (
+                      <label key={perm} className="flex items-center space-x-2 text-xs">
+                        <input
+                          type="checkbox"
+                          checked={newUser.permissions.includes(perm as Permission)}
+                          onChange={(e) => {
+                            const checked = e.target.checked;
+                            setNewUser((prev) => {
+                              const perms = checked
+                                ? [...prev.permissions, perm as Permission]
+                                : prev.permissions.filter((p) => p !== perm);
+                              return { ...prev, permissions: perms };
+                            });
+                          }}
+                        />
+                        <span>{perm}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <button onClick={handleAddUser} className="mt-4 bg-accent text-white px-4 py-2 rounded">
+                Ajouter
+              </button>
+            </div>
+          </div>
+        );
+        
       default:
         return null;
     }
@@ -814,6 +987,16 @@ const Settings: React.FC = () => {
                   <FontAwesomeIcon icon={faKey} className="mr-3" />
                   <span>Intégrations</span>
                 </button>
+
+                {user?.role === 'admin' && (
+                  <button
+                    className={`flex items-center px-4 py-3 rounded-lg mb-1 ${activeTab === 'users' ? 'bg-accent text-white' : 'hover:bg-gray-200'}`}
+                    onClick={() => setActiveTab('users')}
+                  >
+                    <FontAwesomeIcon icon={faUsers} className="mr-3" />
+                    <span>Utilisateurs</span>
+                  </button>
+                )}
               </div>
             </div>
           </div>

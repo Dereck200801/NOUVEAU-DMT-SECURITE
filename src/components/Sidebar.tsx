@@ -31,6 +31,8 @@ import { useAuth } from '../context/AuthContext';
 import { Button } from './ui/button';
 import { CardFooter } from './ui/card';
 import { cn } from '../lib/utils';
+import WithPermission from './WithPermission';
+import { Permission } from '../auth/rbac';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -70,9 +72,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
         <nav className="flex-1 mt-4 px-2 overflow-y-auto">
           {/* Menu items with active state handling */}
           {[
-            { path: '/dashboard', icon: faTachometerAlt, label: 'Tableau de bord' },
-            { path: '/agents', icon: faUserShield, label: 'Agents', badge: '24' },
-            { path: '/missions', icon: faTasks, label: 'Missions', badge: '8' },
+            { path: '/dashboard', icon: faTachometerAlt, label: 'Tableau de bord', perm: Permission.DASHBOARD_VIEW },
+            { path: '/agents', icon: faUserShield, label: 'Agents', badge: '24', perm: Permission.MISSIONS_VIEW },
+            { path: '/missions', icon: faTasks, label: 'Missions', badge: '8', perm: Permission.MISSIONS_VIEW },
             { path: '/calendar', icon: faCalendarAlt, label: 'Calendrier' },
             { path: '/clients', icon: faBuilding, label: 'Clients' },
             { path: '/employees', icon: faUsers, label: 'Employés' },
@@ -88,26 +90,35 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
             { path: '/helpdesk', icon: faLifeRing, label: 'Help Desk' },
             { path: '/risk-management', icon: faExclamationTriangle, label: 'Risques' },
             { path: '/reports', icon: faFileAlt, label: 'Rapports' },
-          ].map((item) => (
-            <Link 
-              key={item.path}
-              to={item.path} 
-              className={cn(
-                "sidebar-link no-underline",
-                location.pathname === item.path && "active"
-              )}
-            >
-              <div className="sidebar-icon">
-                <FontAwesomeIcon icon={item.icon} />
-              </div>
-              <span>{item.label}</span>
-              {item.badge && (
-                <span className="ml-auto bg-yale-blue/10 text-yale-blue text-xs rounded-full px-2 py-0.5">
-                  {item.badge}
-                </span>
-              )}
-            </Link>
-          ))}
+          ].map((item) => {
+            const link = (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={cn(
+                  'sidebar-link no-underline',
+                  location.pathname === item.path && 'active'
+                )}
+              >
+                <div className="sidebar-icon">
+                  <FontAwesomeIcon icon={item.icon} />
+                </div>
+                <span>{item.label}</span>
+                {item.badge && (
+                  <span className="ml-auto bg-yale-blue/10 text-yale-blue text-xs rounded-full px-2 py-0.5">
+                    {item.badge}
+                  </span>
+                )}
+              </Link>
+            );
+            return item.perm ? (
+              <WithPermission perm={item.perm} key={item.path}>
+                {link}
+              </WithPermission>
+            ) : (
+              link
+            );
+          })}
           
           {/* Séparateur pour les modules premium */}
           <div className="sidebar-section-title mt-6">

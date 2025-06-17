@@ -20,6 +20,7 @@ import Layout from './components/Layout';
 // Pages
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import Forbidden from './pages/Forbidden';
 import Agents from './pages/Agents';
 import Missions from './pages/Missions';
 import Calendar from './pages/Calendar';
@@ -45,6 +46,8 @@ import Analytics from './pages/Analytics';
 import Billing from './pages/Billing';
 import HelpDesk from './pages/HelpDesk';
 import RiskManagement from './pages/RiskManagement';
+import ProtectedRoute from './components/ProtectedRoute';
+import { Permission } from './auth/rbac';
 
 // Font Awesome
 import { library } from '@fortawesome/fontawesome-svg-core';
@@ -185,9 +188,23 @@ function App() {
                                 
                                 {/* Protected Routes with Layout */}
                                 <Route element={<Layout title="Tableau de Bord" />}>
-                                  <Route path="/dashboard" element={<Dashboard />} />
+                                  <Route
+                                    path="/dashboard"
+                                    element={
+                                      <ProtectedRoute perm={Permission.DASHBOARD_VIEW}>
+                                        <Dashboard />
+                                      </ProtectedRoute>
+                                    }
+                                  />
                                   <Route path="/agents" element={<Agents />} />
-                                  <Route path="/missions" element={<Missions />} />
+                                  <Route
+                                    path="/missions"
+                                    element={
+                                      <ProtectedRoute perm={Permission.MISSIONS_VIEW}>
+                                        <Missions />
+                                      </ProtectedRoute>
+                                    }
+                                  />
                                   <Route path="/calendar" element={<Calendar />} />
                                   <Route path="/clients" element={<Clients />} />
                                   <Route path="/reports" element={<Reports />} />
@@ -209,10 +226,20 @@ function App() {
                                   <Route path="/training" element={<Training />} />
                                   <Route path="/analytics" element={<Analytics />} />
                                   <Route path="/billing" element={<Billing />} />
-                                  <Route path="/helpdesk" element={<HelpDesk />} />
+                                  <Route
+                                    path="/helpdesk"
+                                    element={
+                                      <ProtectedRoute perm={Permission.TICKETS_VIEW}>
+                                        <HelpDesk />
+                                      </ProtectedRoute>
+                                    }
+                                  />
                                   <Route path="/risk-management" element={<RiskManagement />} />
                                 </Route>
                                 
+                                {/* Access denied */}
+                                <Route path="/403" element={<Forbidden />} />
+
                                 {/* Catch-all route */}
                                 <Route path="*" element={<Navigate to="/login" replace />} />
                               </Routes>
