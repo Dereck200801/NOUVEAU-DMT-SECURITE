@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faUser, 
@@ -10,7 +10,8 @@ import {
   faUserShield,
   faKey,
   faTrash,
-  faUsers
+  faUsers,
+  faInfoCircle
 } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../context/AuthContext';
 import { ToastContainer, toast } from 'react-toastify';
@@ -22,6 +23,7 @@ import { CompanyFormData } from '../types/company';
 import { AuthUser } from '../context/AuthContext';
 import { Role, AccreditationLevel, ROLE_PERMISSIONS } from '../auth/rbac';
 import { Permission } from '../auth/rbac';
+import { ThemeContext, Theme } from '../context/ThemeContext';
 
 const Settings: React.FC = () => {
   const { user, updateUserProfile, isLoading: isAuthLoading } = useAuth();
@@ -125,6 +127,9 @@ const Settings: React.FC = () => {
     density: 'comfortable' // 'comfortable' | 'compact'
   });
 
+  // Theme context
+  const { setTheme: applyTheme } = useContext(ThemeContext);
+
   // 2-Factor Authentication state
   const [is2FAEnabled, setIs2FAEnabled] = useState(false);
 
@@ -216,6 +221,11 @@ const Settings: React.FC = () => {
   ) => {
     const { name, value } = e.target;
     setPreferencesForm(prev => ({ ...prev, [name]: value }));
+
+    // Apply theme immediately when selecting a different theme option
+    if (name === 'theme') {
+      applyTheme(value as Theme);
+    }
   };
 
   const handlePreferencesSubmit = async (e: React.FormEvent) => {
@@ -225,6 +235,9 @@ const Settings: React.FC = () => {
       // TODO: Send to backend
       localStorage.setItem('theme', preferencesForm.theme);
       localStorage.setItem('density', preferencesForm.density);
+
+      // Apply theme after saving preferences
+      applyTheme(preferencesForm.theme as Theme);
       toast.success('Préférences mises à jour');
     } catch (error) {
       console.error('Error updating preferences:', error);
@@ -914,6 +927,158 @@ const Settings: React.FC = () => {
           </div>
         );
         
+      case 'legal':
+        return (
+          <div className="prose max-w-none">
+            <h2 className="text-base font-semibold mb-4">Informations légales, confidentialité &amp; conformité</h2>
+
+            {/* CGU */}
+            <h3 className="mt-6 mb-2 font-semibold">1. Conditions générales d'utilisation (CGU)</h3>
+            <p>
+              L'accès et l'utilisation de l'application&nbsp;<strong>DMT&nbsp;Sécurité</strong> impliquent
+              l'acceptation sans réserve des présentes&nbsp;CGU. Celles-ci peuvent être modifiées à tout moment ;
+              l'utilisateur est invité à les consulter régulièrement. L'usage est strictement réservé à des fins
+              professionnelles internes ou contractuellement prévues avec&nbsp;DMT Sécurité.
+            </p>
+
+            {/* Données collectées */}
+            <h3 className="mt-6 mb-2 font-semibold">2. Données collectées</h3>
+            <ul className="list-disc list-inside">
+              <li><strong>Données d'identification&nbsp;:</strong> nom, prénom, adresse e-mail, numéro de téléphone, rôle, langue.</li>
+              <li><strong>Données de connexion&nbsp;:</strong> journaux d'accès, adresse IP, type de navigateur, horodatages.</li>
+              <li><strong>Données opérationnelles&nbsp;:</strong> missions, planning, localisation d'équipements, rapports.</li>
+              <li><strong>Données issues de la caméra&nbsp;:</strong> flux vidéo et images capturées, métadonnées (heure, lieu), empreintes faciales vectorisées dans le cadre de la reconnaissance faciale.</li>
+              <li><strong>Données biométriques&nbsp;:</strong> gabarits faciaux générés et stockés de manière chiffrée pour la vérification d'identité et le contrôle de présence.</li>
+            </ul>
+
+            {/* Finalités & bases légales */}
+            <h3 className="mt-6 mb-2 font-semibold">3. Finalités et bases légales</h3>
+            <p>Les traitements reposent sur&nbsp;:</p>
+            <ul className="list-decimal list-inside">
+              <li><em>L'exécution d'un contrat</em> : gestion des agents, missions, équipements et rapports.</li>
+              <li><em>L'intérêt légitime</em> : sécurisation des locaux et des personnes via la vidéosurveillance et la reconnaissance faciale.</li>
+              <li><em>Le consentement</em> : envoi de notifications marketing ou collecte de certains cookies analytiques.</li>
+              <li><em>Le respect d'obligations légales</em> : archivage, comptabilité, réponses aux autorités compétentes.</li>
+            </ul>
+
+            {/* Utilisation de la caméra */}
+            <h4 className="mt-4 mb-1 font-semibold">3.1 Utilisation de la caméra et des flux vidéo</h4>
+            <p>
+              Les caméras connectées permettent :
+            </p>
+            <ul className="list-disc list-inside">
+              <li>la <strong>détection et vérification faciale</strong> des agents pour la pointage de présence ;</li>
+              <li>la <strong>surveillance en temps réel</strong> des missions à risque ;</li>
+              <li>la génération de <strong>preuves vidéos</strong> en cas d'incident.</li>
+            </ul>
+            <p>
+              Les flux ne sont <strong>pas</strong> enregistrés en continu sauf configuration explicite. Les images capturées
+              sont conservées <strong>30&nbsp;jours</strong> puis supprimées automatiquement, sauf si une investigation
+              impose une conservation plus longue.
+            </p>
+
+            {/* Conservation */}
+            <h3 className="mt-6 mb-2 font-semibold">4. Durées de conservation</h3>
+            <table>
+              <thead>
+                <tr><th>Catégorie</th><th>Durée</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Données de compte</td><td>Durée de la relation contractuelle + 5&nbsp;ans</td></tr>
+                <tr><td>Logs de connexion</td><td>12&nbsp;mois</td></tr>
+                <tr><td>Images &amp; vidéos</td><td>30&nbsp;jours</td></tr>
+                <tr><td>Gabarits biométriques</td><td>Durée du contrat ou jusqu'à révocation du consentement</td></tr>
+              </tbody>
+            </table>
+
+            {/* Partage */}
+            <h3 className="mt-6 mb-2 font-semibold">5. Destinataires &amp; transferts</h3>
+            <p>
+              Les données sont accessibles aux équipes internes habilitées (opérations, sécurité&nbsp;IT, RH) et à nos
+              prestataires sous-traitants (hébergement, notification push, traitement vidéo) agissant sur instruction
+              stricte et soumis à des obligations de confidentialité conformes au&nbsp;RGPD. Aucun transfert hors Union
+              européenne n'est réalisé sans garanties adéquates (clauses contractuelles types ou décision d'adéquation).
+            </p>
+
+            {/* Sécurité */}
+            <h3 className="mt-6 mb-2 font-semibold">6. Mesures de sécurité</h3>
+            <p>
+              DMT Sécurité applique des mesures techniques et organisationnelles : chiffrement&nbsp;AES-256 des médias,
+              stockage cloisonné, contrôle d'accès à plusieurs facteurs, journalisation, audits réguliers,
+              tests d'intrusion et politique de sauvegarde chiffrée.
+            </p>
+
+            {/* Cookies */}
+            <h3 className="mt-6 mb-2 font-semibold">7. Cookies &amp; traceurs</h3>
+            <p>
+              L'application web utilise uniquement des cookies essentiels au fonctionnement (session, préférence de
+              thème). Aucun cookie publicitaire n'est déposé. Des statistiques anonymisées peuvent être collectées via
+              <em>Matomo</em> ou équivalent, avec option d'opposition disponible dans le pied de page.
+            </p>
+
+            {/* Droits */}
+            <h3 className="mt-6 mb-2 font-semibold">8. Vos droits</h3>
+            <p>
+              Vous disposez des droits d'accès, de rectification, d'effacement, de limitation, d'opposition, de
+              portabilité et du droit de définir des directives post-mortem. Pour les données biométriques, vous
+              pouvez retirer votre consentement à tout moment&nbsp;: votre gabarit facial sera alors supprimé dans un
+              délai de 30&nbsp;jours.
+            </p>
+
+            {/* DPO */}
+            <h3 className="mt-6 mb-2 font-semibold">9. Contact Délégué à la protection des données (DPO)</h3>
+            <p>
+              Courriel&nbsp;: dpo@dmt-securite.example • Téléphone&nbsp;: +241&nbsp;01&nbsp;02&nbsp;03&nbsp;99.<br/>
+              Adresse&nbsp;: DPO — Digital Monitoring &amp; Tracking, BP 12345, Libreville.
+            </p>
+
+            {/* Mises à jour */}
+            <h3 className="mt-6 mb-2 font-semibold">10. Mise à jour de la présente politique</h3>
+            <p>
+              Cette notice est susceptible d'évoluer pour refléter les changements législatifs ou fonctionnels. La
+              date de dernière mise à jour est indiquée ci-dessous. Les utilisateurs seront notifiés en cas de
+              changements majeurs.
+            </p>
+
+            {/* Crédits */}
+            <h3 className="mt-6 mb-2 font-semibold">11. Crédits &amp; licences open-source</h3>
+            <ul className="list-disc list-inside">
+              <li>Icônes&nbsp;: FontAwesome (CC BY 4.0), Lucide-React.</li>
+              <li>Frameworks&nbsp;: React, Vite, Tailwind CSS (licence MIT).</li>
+              <li>Reconnaissance faciale&nbsp;: face-api.js, TensorFlow.js.</li>
+            </ul>
+
+            {/* Sous-traitants */}
+            <h3 className="mt-6 mb-2 font-semibold">12. Sous-traitants &amp; hébergement</h3>
+            <p>Nos principaux prestataires :</p>
+            <ul className="list-disc list-inside">
+              <li><strong>AWS EU-Central-1 (Francfort)</strong> — hébergement des serveurs et base de données chiffrée (KMS).</li>
+              <li><strong>Google Firebase Cloud Messaging</strong> — acheminement des notifications push.</li>
+              <li><strong>Stripe, Inc.</strong> — traitement des paiements (données financières pseudonymisées).</li>
+              <li><strong>OVHCloud</strong> — sauvegardes chiffrées hors-site dans l'Union européenne.</li>
+            </ul>
+            <p>Des clauses contractuelles types (CCT) encadrent tout transfert hors UE.</p>
+
+            {/* Analyse d'impact & conformité */}
+            <h3 className="mt-6 mb-2 font-semibold">13. Analyse d'impact (AIPD) &amp; audit</h3>
+            <p>
+              Une AIPD (DPIA) spécifique au module de reconnaissance faciale a été conduite conformément à l'article 35 du RGPD ;
+              le registre des traitements est disponible sur demande. Des audits de sécurité et de conformité sont
+              réalisés chaque année par un tiers indépendant certifié PASSI.
+            </p>
+
+            {/* Notification de violation */}
+            <h3 className="mt-6 mb-2 font-semibold">14. Procédure en cas de violation de données</h3>
+            <p>
+              Toute violation de sécurité présentant un risque pour les droits et libertés des personnes est notifiée
+              à la CNIL dans un délai maximal de <strong>72 heures</strong> après détection. Les personnes concernées
+              sont informées sans délai lorsque la violation est susceptible d'engendrer un risque élevé.
+            </p>
+
+            <p className="text-sm mt-4 italic">Dernière mise à jour&nbsp;: {new Date().toLocaleDateString()}</p>
+          </div>
+        );
+        
       default:
         return null;
     }
@@ -997,6 +1162,14 @@ const Settings: React.FC = () => {
                     <span>Utilisateurs</span>
                   </button>
                 )}
+
+                <button
+                  className={`flex items-center px-4 py-3 rounded-lg mb-1 ${activeTab === 'legal' ? 'bg-accent text-white' : 'hover:bg-gray-200'}`}
+                  onClick={() => setActiveTab('legal')}
+                >
+                  <FontAwesomeIcon icon={faInfoCircle} className="mr-3" />
+                  <span>Légal</span>
+                </button>
               </div>
             </div>
           </div>

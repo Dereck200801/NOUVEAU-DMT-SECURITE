@@ -32,12 +32,14 @@ export const useReports = () => {
   const [itemsPerPage] = useState(5);
 
   const addReport = useCallback((newReport: Partial<Report>) => {
+    const nextId = reports.length ? Math.max(...reports.map(r => r.id)) + 1 : 1;
+
     const report: Report = {
       ...newReport,
-      id: Math.max(...reports.map(r => r.id)) + 1,
+      id: nextId,
       date: new Date().toLocaleDateString('fr-FR'),
-      size: '0 KB',
-      status: 'Brouillon',
+      size: newReport.size || '0 KB',
+      status: (newReport.status as Report['status']) || 'draft',
     } as Report;
 
     setReports(prev => [...prev, report]);
@@ -57,19 +59,29 @@ export const useReports = () => {
     const report = reports.find(r => r.id === id);
     if (!report) return;
 
-    // In a real application, this would trigger a download from your backend
-    console.log(`Downloading report: ${report.title}`);
-    // Simulate download with a dummy PDF
-    const dummyContent = `Report Content for ${report.title}`;
-    const blob = new Blob([dummyContent], { type: 'application/pdf' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${report.title}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
+    if (report.fileUrl) {
+      // Download the provided file
+      const a = document.createElement('a');
+      a.href = report.fileUrl;
+      // Try to keep original extension if possible
+      const extensionMatch = report.fileUrl.split('.').pop();
+      a.download = `${report.title}.${extensionMatch || 'pdf'}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } else {
+      // Fallback: generate dummy content
+      const dummyContent = `Report Content for ${report.title}`;
+      const blob = new Blob([dummyContent], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${report.title}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    }
   }, [reports]);
 
   // Get paginated reports

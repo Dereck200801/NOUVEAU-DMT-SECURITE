@@ -11,7 +11,7 @@ import {
 interface NotificationToastProps {
   show: boolean;
   message: string;
-  type: 'success' | 'error' | 'info' | 'warning';
+  type: 'success' | 'error' | 'info' | 'warning' | 'danger';
   onClose: () => void;
   autoClose?: boolean;
   duration?: number;
@@ -44,6 +44,7 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
       case 'success':
         return <FontAwesomeIcon icon={faCheckCircle} className="text-white" />;
       case 'error':
+      case 'danger':
         return <FontAwesomeIcon icon={faExclamationCircle} className="text-white" />;
       case 'warning':
         return <FontAwesomeIcon icon={faExclamationTriangle} className="text-white" />;
@@ -57,6 +58,7 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
       case 'success':
         return 'bg-green-500';
       case 'error':
+      case 'danger':
         return 'bg-red-500';
       case 'warning':
         return 'bg-yellow-500';

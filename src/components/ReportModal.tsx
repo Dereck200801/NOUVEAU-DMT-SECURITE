@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTimes, faCalendarAlt, faUser, faFileAlt } from '@fortawesome/free-solid-svg-icons';
+import { faTimes, faCalendarAlt, faUser, faDownload } from '@fortawesome/free-solid-svg-icons';
 import type { Report, ReportModalProps } from '../types/report';
 
 const ReportModal = ({ isOpen, onClose, report, mode, onSave, reportTypes }: ReportModalProps) => {
@@ -11,9 +11,41 @@ const ReportModal = ({ isOpen, onClose, report, mode, onSave, reportTypes }: Rep
       date: new Date().toLocaleDateString('fr-FR'),
       author: '',
       description: '',
-      status: 'Brouillon'
+      status: 'draft'
     }
   );
+
+  // Local state for the selected file (only used while creating / editing)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setSelectedFile(file);
+
+    // Create an object URL so we can preview / download the file from memory
+    const url = URL.createObjectURL(file);
+
+    // Compute the human-readable size
+    const sizeInMB = (file.size / (1024 * 1024)).toFixed(1);
+
+    setFormData(prev => ({
+      ...prev,
+      fileUrl: url,
+      size: `${sizeInMB} MB`,
+    }));
+  };
+
+  // Clean up object URL when modal unmounts or file changes
+  useEffect(() => {
+    return () => {
+      if (selectedFile && formData.fileUrl?.startsWith('blob:')) {
+        URL.revokeObjectURL(formData.fileUrl);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedFile]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,9 +66,19 @@ const ReportModal = ({ isOpen, onClose, report, mode, onSave, reportTypes }: Rep
           <h2 className="text-2xl font-bold">
             {mode === 'view' ? 'Détails du rapport' : mode === 'create' ? 'Nouveau rapport' : 'Modifier le rapport'}
           </h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-            <FontAwesomeIcon icon={faTimes} />
-          </button>
+          <div className="flex items-center gap-3">
+            {isViewMode && report && (
+              <button
+                onClick={() => import('../utils/pdfUtils').then(m => m.exportReportDetailsToPdf(report))}
+                className="text-accent hover:text-blue-700 flex items-center gap-1 text-sm border border-accent px-3 py-1 rounded"
+              >
+                <FontAwesomeIcon icon={faDownload} /> Export PDF
+              </button>
+            )}
+            <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+              <FontAwesomeIcon icon={faTimes} />
+            </button>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit}>
@@ -80,6 +122,22 @@ const ReportModal = ({ isOpen, onClose, report, mode, onSave, reportTypes }: Rep
               />
             </div>
 
+            {/* File upload (create / edit modes) */}
+            {!isViewMode && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Fichier (PDF ou Word)</label>
+                <input
+                  type="file"
+                  accept=".pdf,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
+                  onChange={handleFileChange}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                />
+                {selectedFile && (
+                  <p className="text-sm text-gray-500 mt-2">{selectedFile.name} – {(selectedFile.size / (1024 * 1024)).toFixed(1)} MB</p>
+                )}
+              </div>
+            )}
+
             {mode === 'view' && (
               <>
                 <div className="grid grid-cols-2 gap-4">
@@ -106,6 +164,45 @@ const ReportModal = ({ isOpen, onClose, report, mode, onSave, reportTypes }: Rep
                     </span>
                   </div>
                 </div>
+                {/* File preview */}
+                {formData.fileUrl && (
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Aperçu du fichier</label>
+                    {(() => {
+                      const ext = formData.fileUrl.split('.').pop()?.toLowerCase();
+                      if (ext === 'pdf') {
+                        return (
+                          <div className="flex flex-col">
+                            <iframe
+                              src={formData.fileUrl}
+                              title="Prévisualisation PDF"
+                              className="w-full h-96 border rounded-lg mb-2"
+                            />
+                            <a
+                              href={formData.fileUrl}
+                              download
+                              className="self-start text-accent hover:underline text-sm"
+                            >
+                              Télécharger le document
+                            </a>
+                          </div>
+                        );
+                      }
+                      return (
+                        <div className="w-full h-48 flex flex-col items-center justify-center border rounded-lg text-center text-sm text-gray-500 p-4">
+                          <p className="mb-2">Aperçu non disponible pour ce type de fichier.</p>
+                          <a
+                            href={formData.fileUrl}
+                            download
+                            className="text-accent hover:underline"
+                          >
+                            Télécharger le document
+                          </a>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -136,11 +233,15 @@ const ReportModal = ({ isOpen, onClose, report, mode, onSave, reportTypes }: Rep
 // Function to get report status class
 const getReportStatusClass = (status: string) => {
   switch (status) {
-    case 'Finalisé':
+    case 'finalized':
       return 'bg-success/20 text-success';
-    case 'En revue':
+    case 'in_review':
       return 'bg-warning/20 text-warning';
-    case 'Brouillon':
+    case 'draft':
+      return 'bg-gray-200 text-gray-500';
+    case 'published':
+      return 'bg-accent/20 text-accent';
+    case 'archived':
       return 'bg-gray-200 text-gray-500';
     default:
       return 'bg-gray-200 text-gray-500';

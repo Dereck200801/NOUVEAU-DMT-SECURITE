@@ -12,6 +12,8 @@ import {
 import AgentProfile from '../components/AgentProfile';
 import { Agent } from '../types/agent';
 import useKeyPress from '../hooks/useKeyPress';
+import ProfessionalCard from '../components/ProfessionalCard';
+import html2canvas from 'html2canvas';
 
 // Sample data for agents
 const INITIAL_AGENTS_DATA: Agent[] = [
@@ -98,6 +100,9 @@ const Agents: React.FC = () => {
   const [currentAgent, setCurrentAgent] = useState<Agent | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [showCardModal, setShowCardModal] = useState(false);
+  const [cardAgent, setCardAgent] = useState<Agent | null>(null);
+  const cardRef = useRef<HTMLDivElement | null>(null);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const [formData, setFormData] = useState<Omit<Agent, 'id'>>({
     name: '',
@@ -187,6 +192,15 @@ const Agents: React.FC = () => {
     }
   };
 
+  // Get avatar URL (custom photo if exists in documents)
+  const getAvatarUrl = (agent: Agent) => {
+    if (agent.documents && agent.documents.length) {
+      const photoDoc = agent.documents.find(d => (d.type === 'ID' || /photo/i.test(d.name)) && d.fileUrl);
+      if (photoDoc && photoDoc.fileUrl) return photoDoc.fileUrl;
+    }
+    return `https://ui-avatars.com/api/?name=${agent.name.replace(' ', '+')}&background=1d4ed8&color=fff`;
+  };
+
   // Handle form input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -198,16 +212,19 @@ const Agents: React.FC = () => {
 
   // Add new agent
   const handleAddAgent = () => {
-    setIsEditing(false);
-    setFormData({
+    const blank: Agent = {
+      id: 0,
       name: '',
       email: '',
       phone: '',
       status: 'active',
       specialty: '',
-      joinDate: new Date().toLocaleDateString('fr-FR')
-    });
-    setShowModal(true);
+      joinDate: new Date().toLocaleDateString('fr-FR'),
+      documents: []
+    } as Agent;
+    setCurrentAgent(blank);
+    setIsEditing(false);
+    setShowProfile(true);
   };
 
   // Edit agent
@@ -232,7 +249,16 @@ const Agents: React.FC = () => {
   };
 
   // Close profile
-  const handleCloseProfile = () => {
+  const handleCloseProfile = (updated?: Agent) => {
+    if (updated) {
+      setAgents(prev => {
+        if (updated.id === 0) {
+          const newId = Math.max(...prev.map(a => a.id), 0) + 1;
+          return [...prev, { ...updated, id: newId }];
+        }
+        return prev.map(a => (a.id === updated.id ? updated : a));
+      });
+    }
     setShowProfile(false);
   };
 
@@ -265,6 +291,10 @@ const Agents: React.FC = () => {
         id: Math.max(...agents.map(a => a.id), 0) + 1
       };
       setAgents([...agents, newAgent]);
+
+      // Open professional card modal for the newly created agent
+      setCardAgent(newAgent);
+      setShowCardModal(true);
     }
     setShowModal(false);
   };
@@ -273,6 +303,36 @@ const Agents: React.FC = () => {
     setOpenMenuId(openMenuId === agentId ? null : agentId);
   };
   
+  // --- Professional Card: Print & Export ---
+  const handlePrintCard = () => {
+    if (!cardRef.current) return;
+
+    const stylesheetLink = (document.querySelector('link[rel="stylesheet"]') as HTMLLinkElement)?.href;
+    const printWindow = window.open('', 'PRINT', 'height=600,width=900');
+    if (!printWindow) return;
+
+    printWindow.document.write(`<!DOCTYPE html><html><head><title>Carte Professionnelle</title>${
+      stylesheetLink ? `<link rel="stylesheet" href="${stylesheetLink}">` : ''
+    }<style>@page { size: 85.6mm 54mm; margin: 0; } body { margin: 0; display: flex; justify-content: center; align-items: center; }</style></head><body>${cardRef.current.outerHTML}</body></html>`);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+  };
+
+  const handleExportCard = async () => {
+    if (!cardRef.current) return;
+    try {
+      const canvas = await html2canvas(cardRef.current);
+      const link = document.createElement('a');
+      link.download = `${cardAgent?.name || 'carte'}_dmt.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } catch (error) {
+      console.error('Erreur export carte:', error);
+    }
+  };
+
   return (
     <div>
       <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -354,7 +414,7 @@ const Agents: React.FC = () => {
                   <td className="py-4 px-6">
                     <div className="flex items-center">
                       <img 
-                        src={`https://ui-avatars.com/api/?name=${agent.name.replace(' ', '+')}&background=1d4ed8&color=fff`} 
+                        src={getAvatarUrl(agent)} 
                         alt={agent.name} 
                         className="w-10 h-10 rounded-full mr-3"
                       />
@@ -447,7 +507,7 @@ const Agents: React.FC = () => {
       </div>
 
       {/* Add/Edit Agent Modal */}
-      {showModal && (
+      {false && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg w-full max-w-2xl p-6">
             <div className="flex justify-between items-center mb-6">
@@ -587,7 +647,39 @@ const Agents: React.FC = () => {
 
       {/* Agent Profile Modal */}
       {showProfile && currentAgent && (
-        <AgentProfile agent={currentAgent} onClose={handleCloseProfile} />
+        <AgentProfile agent={currentAgent} onClose={handleCloseProfile} isNew={currentAgent?.id === 0} />
+      )}
+
+      {/* Professional Card Modal */}
+      {showCardModal && cardAgent && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg w-full max-w-md p-6">
+            <h2 className="text-xl font-bold mb-4">Carte professionnelle</h2>
+            <div className="flex justify-center mb-4">
+              <ProfessionalCard ref={cardRef} agent={cardAgent} />
+            </div>
+            <div className="flex justify-end space-x-3">
+              <button
+                className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-blue-700"
+                onClick={handlePrintCard}
+              >
+                Imprimer
+              </button>
+              <button
+                className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-blue-700"
+                onClick={handleExportCard}
+              >
+                Exporter
+              </button>
+              <button
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                onClick={() => setShowCardModal(false)}
+              >
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

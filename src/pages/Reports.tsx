@@ -18,6 +18,7 @@ import NotificationToast from '../components/NotificationToast';
 import { useReports } from '../hooks/useReports';
 import { useNotifications } from '../context/NotificationContext';
 import type { Report } from '../types/report';
+import { exportReportsToPdf } from '../utils/pdfUtils';
 
 // Function to get report status class
 const getReportStatusClass = (status: Report['status']) => {
@@ -132,17 +133,36 @@ const Reports: React.FC = () => {
     });
   };
 
+  const handleExportPdf = () => {
+    exportReportsToPdf('rapports.pdf', reports).then(() => {
+      addNotification({
+        type: 'success',
+        title: 'Export PDF',
+        message: 'Le fichier rapports.pdf a été généré et téléchargé.'
+      });
+    });
+  };
+
   return (
     <div>
       <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <h1 className="text-2xl font-bold">Rapports et Documents</h1>
-        <button 
-          className="bg-accent hover:bg-blue-700 text-white py-2 px-4 rounded-lg flex items-center"
-          onClick={() => setModalState({ isOpen: true, mode: 'create' })}
-        >
-          <FontAwesomeIcon icon={faPlus} className="mr-2" />
-          Nouveau rapport
-        </button>
+        <div className="flex gap-3">
+          <button 
+            className="bg-accent hover:bg-blue-700 text-white py-2 px-4 rounded-lg flex items-center"
+            onClick={() => setModalState({ isOpen: true, mode: 'create' })}
+          >
+            <FontAwesomeIcon icon={faPlus} className="mr-2" />
+            Nouveau rapport
+          </button>
+          <button
+            className="bg-success hover:bg-green-700 text-white py-2 px-4 rounded-lg flex items-center"
+            onClick={handleExportPdf}
+          >
+            <FontAwesomeIcon icon={faDownload} className="mr-2" />
+            Export PDF
+          </button>
+        </div>
       </div>
       
       {/* Stats cards */}
@@ -289,6 +309,13 @@ const Reports: React.FC = () => {
                       >
                         <FontAwesomeIcon icon={faDownload} />
                       </button>
+                      <button
+                        className="text-accent hover:text-blue-700"
+                        onClick={() => import('../utils/pdfUtils').then(m => m.exportReportDetailsToPdf(report))}
+                        title="Exporter le rapport en PDF"
+                      >
+                        <FontAwesomeIcon icon={faFileAlt} />
+                      </button>
                       <button 
                         className="text-accent hover:text-blue-700"
                         onClick={() => setModalState({ isOpen: true, mode: 'edit', report })}
@@ -354,11 +381,16 @@ const Reports: React.FC = () => {
         reportTypes={reportTypes}
       />
 
-      {/* Add NotificationToast component */}
-      <NotificationToast
-        notifications={notifications}
-        onRemove={removeNotification}
-      />
+      {/* Notifications */}
+      {notifications.map((n) => (
+        <NotificationToast
+          key={n.id}
+          show={true}
+          message={n.message}
+          type={n.type === 'danger' ? 'error' : n.type}
+          onClose={() => removeNotification(n.id)}
+        />
+      ))}
     </div>
   );
 };

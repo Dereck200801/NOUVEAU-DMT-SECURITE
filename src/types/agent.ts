@@ -41,7 +41,8 @@ export type NewAgent = Omit<Agent, 'id' | 'created_at' | 'updated_at'>;
 
 export interface AgentProfileProps {
   agent: Agent;
-  onClose: () => void;
+  onClose: (updated?: Agent) => void;
+  isNew?: boolean;
 }
 
 export interface NewDocument {

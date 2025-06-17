@@ -95,6 +95,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(false);
   }, []);
 
+  // Sync changes made in localStorage by other services (e.g., userService)
+  useEffect(() => {
+    const listener = (e: StorageEvent) => {
+      if (e.key === 'user' && e.newValue) {
+        const newUser = JSON.parse(e.newValue);
+        setUser(newUser);
+      }
+    };
+    window.addEventListener('storage', listener);
+    return () => window.removeEventListener('storage', listener);
+  }, []);
+
   const login = async (username: string, password: string): Promise<boolean> => {
     // Charger la base utilisateurs
     const stored = localStorage.getItem('appUsers');

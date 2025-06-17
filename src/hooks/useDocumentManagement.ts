@@ -22,6 +22,7 @@ interface UseDocumentManagementReturn {
   handlePreviewDocument: (doc: Document) => void;
   handleClosePreview: () => void;
   validateForm: () => boolean;
+  addDocumentFromFile: (file: File, name: string, type?: string) => void;
 }
 
 export const useDocumentManagement = (agent: Agent): UseDocumentManagementReturn => {
@@ -161,6 +162,21 @@ export const useDocumentManagement = (agent: Agent): UseDocumentManagementReturn
     setShowPreview(false);
   };
 
+  // Ajout rapide d'un document (utilisé pour photo d'identité)
+  const addDocumentFromFile = (file: File, name: string, type = 'ID') => {
+    const newId = documents.length > 0 ? Math.max(...documents.map(d => d.id)) + 1 : 1;
+    const fileUrl = URL.createObjectURL(file);
+    const newDoc: Document = {
+      id: newId,
+      name,
+      type,
+      date: new Date().toLocaleDateString('fr-FR'),
+      file,
+      fileUrl,
+    };
+    setDocuments([...documents, newDoc]);
+  };
+
   return {
     documents,
     showAddDocument,
@@ -176,6 +192,7 @@ export const useDocumentManagement = (agent: Agent): UseDocumentManagementReturn
     handleDeleteDocument,
     handlePreviewDocument,
     handleClosePreview,
-    validateForm
+    validateForm,
+    addDocumentFromFile
   };
 }; 

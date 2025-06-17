@@ -18,7 +18,7 @@ export default {
         'yale-blue': '#134074',
         'berkeley-blue': '#13315c',
         'oxford-blue': '#0b2545',
-        'powder-blue': '#0b2545',
+        'powder-blue': '#134074',
         'mint-cream': '#0b2545',
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -63,8 +63,8 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-        display: ['Outfit', 'sans-serif'],
+        sans: ['"Space Grotesk"', 'sans-serif'],
+        display: ['"Space Grotesk"', 'sans-serif'],
       },
       borderRadius: {
         lg: "var(--radius)",

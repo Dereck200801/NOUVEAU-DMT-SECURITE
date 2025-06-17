@@ -13,7 +13,8 @@ import {
   faCheckCircle,
   faTimesCircle,
   faHistory,
-  faFileAlt
+  faFileAlt,
+  faTimes
 } from '@fortawesome/free-solid-svg-icons';
 import { accreditationService } from '../../services/accreditationService';
 import { 
@@ -22,6 +23,7 @@ import {
   AccreditationStats 
 } from '../../types/accreditation';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../components/ui/card';
+import AccreditationForm from '../../components/AccreditationForm';
 
 const Accreditations: React.FC = () => {
   const [accreditations, setAccreditations] = useState<Accreditation[]>([]);
@@ -115,6 +117,78 @@ const Accreditations: React.FC = () => {
     });
   };
   
+  // Composant modal pour afficher le document
+  const DocumentModal: React.FC<{ document: AccreditationDocument; onClose: () => void }> = ({ document, onClose }) => {
+    if (!document) return null;
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg w-full max-w-lg p-6 animate-fade-in relative">
+          <button
+            className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+            onClick={onClose}
+          >
+            <FontAwesomeIcon icon={faTimes} />
+          </button>
+          <h2 className="text-xl font-bold text-oxford-blue mb-4">{document.fileName}</h2>
+          <div className="space-y-2 text-sm text-berkeley-blue/80">
+            <p>Type de fichier: <span className="font-medium text-oxford-blue">{document.fileType}</span></p>
+            <p>Taille: <span className="font-medium text-oxford-blue">{(document.fileSize / 1024).toFixed(2)} Ko</span></p>
+            <p>Téléversé le: <span className="font-medium text-oxford-blue">{new Date(document.uploadDate).toLocaleDateString()}</span> par {document.uploadedBy}</p>
+            <p>Statut du scan: <span className="font-medium text-oxford-blue">{document.scanStatus}</span></p>
+          </div>
+          <div className="mt-6 flex justify-end gap-3">
+            <a
+              href={document.fileUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-4 py-2 bg-yale-blue text-white rounded-lg hover:bg-berkeley-blue transition-colors"
+            >
+              Ouvrir le document
+            </a>
+            <button
+              className="px-4 py-2 border border-powder-blue/30 rounded-lg text-berkeley-blue hover:bg-powder-blue/10 transition-colors"
+              onClick={onClose}
+            >
+              Fermer
+            </button>
+          </div>
+          {document.ocrData && (
+            <div className="mt-8">
+              <h3 className="text-lg font-semibold text-oxford-blue mb-2">Données OCR</h3>
+              <pre className="whitespace-pre-wrap bg-powder-blue/10 p-4 rounded-lg text-xs text-berkeley-blue/90 max-h-60 overflow-y-auto">
+                {JSON.stringify(document.ocrData, null, 2)}
+              </pre>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+  
+  // Handler for creating a new accreditation
+  const handleAddAccreditation = async (
+    data: Omit<Accreditation, 'id' | 'status' | 'verificationStatus' | 'documentId'> & { file?: File }
+  ) => {
+    // Create the accreditation first
+    const { file, ...accreditationData } = data as any;
+    const newAcc = await accreditationService.createAccreditation({ ...accreditationData });
+    if (newAcc) {
+      // If a file was provided, upload it and link to accreditation
+      if (file) {
+        const uploadedDoc = await accreditationService.uploadDocument(newAcc.id, file);
+        if (uploadedDoc) {
+          newAcc.documentId = uploadedDoc.id;
+        }
+      }
+      // Update local state
+      setAccreditations((prev) => [...prev, newAcc]);
+      setShowUploadModal(false);
+      // refresh stats
+      const statsData = await accreditationService.getAccreditationStats();
+      setStats(statsData);
+    }
+  };
+  
   return (
     <div className="space-y-6">
       {/* En-tête de la page */}
@@ -125,7 +199,10 @@ const Accreditations: React.FC = () => {
             Gestion des accréditations et des autorisations
           </p>
         </div>
-        <button className="inline-flex items-center px-4 py-2 bg-yale-blue text-white rounded-lg hover:bg-berkeley-blue transition-colors">
+        <button
+          className="inline-flex items-center px-4 py-2 bg-yale-blue text-white rounded-lg hover:bg-berkeley-blue transition-colors"
+          onClick={() => setShowUploadModal(true)}
+        >
           <FontAwesomeIcon icon={faPlus} className="mr-2" />
           Nouvelle accréditation
         </button>
@@ -359,6 +436,22 @@ const Accreditations: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Modal de document */}
+      {showDocumentModal && documentDetails && (
+        <DocumentModal
+          document={documentDetails}
+          onClose={() => setShowDocumentModal(false)}
+        />
+      )}
+
+      {/* Modal for adding a new accreditation */}
+      {showUploadModal && (
+        <AccreditationForm
+          onCancel={() => setShowUploadModal(false)}
+          onSubmit={handleAddAccreditation}
+        />
+      )}
     </div>
   );
 };

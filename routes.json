@@ -1,5 +1,7 @@
 {
   "/api/events": "/events",
   "/api/events/:id": "/events/:id",
-  "/api/events/month/:year/:month": "/events?date_like=^:year-:month"
+  "/api/events/month/:year/:month": "/events?date_like=^:year-:month",
+  "/api/employees": "/employees",
+  "/api/employees/:id": "/employees/:id"
 } 
