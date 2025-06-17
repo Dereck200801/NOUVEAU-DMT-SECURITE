@@ -196,7 +196,9 @@ function App() {
                                       </ProtectedRoute>
                                     }
                                   />
-                                  <Route path="/agents" element={<Agents />} />
+                                  <Route
+                                    path="/agents"
+                                    element={<ProtectedRoute perm={Permission.EMPLOYEES_VIEW}><Agents /></ProtectedRoute>} />
                                   <Route
                                     path="/missions"
                                     element={
@@ -205,11 +207,17 @@ function App() {
                                       </ProtectedRoute>
                                     }
                                   />
-                                  <Route path="/calendar" element={<Calendar />} />
-                                  <Route path="/clients" element={<Clients />} />
+                                  <Route
+                                    path="/calendar"
+                                    element={<ProtectedRoute perm={Permission.MISSIONS_VIEW}><Calendar/></ProtectedRoute>} />
+                                  <Route
+                                    path="/clients"
+                                    element={<ProtectedRoute perm={Permission.CLIENTS_VIEW}><Clients/></ProtectedRoute>} />
                                   <Route path="/reports" element={<Reports />} />
                                   <Route path="/settings" element={<Settings />} />
-                                  <Route path="/employees" element={<Employees />} />
+                                  <Route
+                                    path="/employees"
+                                    element={<ProtectedRoute perm={Permission.EMPLOYEES_VIEW}><Employees/></ProtectedRoute>} />
                                   
                                   {/* Premium Module Routes */}
                                   <Route path="/premium/facial-recognition" element={<FacialRecognition />} />
@@ -217,15 +225,33 @@ function App() {
                                   <Route path="/premium/crisis-simulator" element={<CrisisSimulator />} />
 
                                   {/* New placeholder pages */}
-                                  <Route path="/planning" element={<Planning />} />
-                                  <Route path="/leaves" element={<Leaves />} />
-                                  <Route path="/equipment" element={<Equipment />} />
-                                  <Route path="/fleet" element={<Fleet />} />
-                                  <Route path="/visitors" element={<Visitors />} />
-                                  <Route path="/compliance" element={<Compliance />} />
-                                  <Route path="/training" element={<Training />} />
-                                  <Route path="/analytics" element={<Analytics />} />
-                                  <Route path="/billing" element={<Billing />} />
+                                  <Route
+                                    path="/planning"
+                                    element={<ProtectedRoute perm={Permission.MISSIONS_VIEW}><Planning/></ProtectedRoute>} />
+                                  <Route
+                                    path="/leaves"
+                                    element={<ProtectedRoute perm={Permission.EMPLOYEES_VIEW}><Leaves/></ProtectedRoute>} />
+                                  <Route
+                                    path="/equipment"
+                                    element={<ProtectedRoute perm={Permission.EQUIPMENT_VIEW}><Equipment/></ProtectedRoute>} />
+                                  <Route
+                                    path="/fleet"
+                                    element={<ProtectedRoute perm={Permission.FLEET_VIEW}><Fleet/></ProtectedRoute>} />
+                                  <Route
+                                    path="/visitors"
+                                    element={<ProtectedRoute perm={Permission.VISITORS_VIEW}><Visitors/></ProtectedRoute>} />
+                                  <Route
+                                    path="/compliance"
+                                    element={<ProtectedRoute perm={Permission.REPORTS_VIEW}><Compliance/></ProtectedRoute>} />
+                                  <Route
+                                    path="/training"
+                                    element={<ProtectedRoute perm={Permission.EMPLOYEES_VIEW}><Training/></ProtectedRoute>} />
+                                  <Route
+                                    path="/analytics"
+                                    element={<ProtectedRoute perm={Permission.DASHBOARD_VIEW}><Analytics/></ProtectedRoute>} />
+                                  <Route
+                                    path="/billing"
+                                    element={<ProtectedRoute perm={Permission.CLIENTS_VIEW}><Billing/></ProtectedRoute>} />
                                   <Route
                                     path="/helpdesk"
                                     element={
@@ -234,7 +260,9 @@ function App() {
                                       </ProtectedRoute>
                                     }
                                   />
-                                  <Route path="/risk-management" element={<RiskManagement />} />
+                                  <Route
+                                    path="/risk-management"
+                                    element={<ProtectedRoute perm={Permission.MISSIONS_VIEW}><RiskManagement/></ProtectedRoute>} />
                                 </Route>
                                 
                                 {/* Access denied */}
