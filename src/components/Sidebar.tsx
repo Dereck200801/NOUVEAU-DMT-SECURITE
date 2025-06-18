@@ -91,7 +91,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar, collapsed, set
       )}
       
       {/* Sidebar */}
-      <aside className={`${sidebarClass} ${collapsed ? 'w-20' : 'w-64'} fixed inset-y-0 left-0 z-50 transform md:translate-x-0 flex flex-col shadow-xl transition-all duration-300`}>
+      <aside
+        className={
+          `${sidebarClass} ${collapsed ? 'w-20' : 'w-64 max-[475px]:w-56'} fixed inset-y-0 left-0 z-50 transform md:translate-x-0 flex flex-col shadow-xl transition-all duration-300 overflow-y-auto`
+        }
+      >
         {/* Company Logo & Name */}
         <div className="sidebar-header cursor-pointer" onClick={handleLogoClick}>
           <div className={cn("flex items-center", collapsed && "justify-center")}>
@@ -99,7 +103,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar, collapsed, set
               <FontAwesomeIcon icon={faShieldAlt} className="text-yale-blue text-xl" />
             </div>
             {!collapsed && (
-              <span className="text-oxford-blue text-xl font-bold tracking-tight">DMT Sécurité</span>
+              <span className="text-oxford-blue text-xl max-[475px]:text-lg font-bold tracking-tight">DMT Sécurité</span>
             )}
           </div>
         </div>

@@ -443,11 +443,11 @@ const Agents: React.FC = () => {
             <thead className="bg-light">
               <tr>
                 <th className="text-left py-4 px-6 font-medium text-sm text-gray-500">NOM</th>
-                <th className="text-left py-4 px-6 font-medium text-sm text-gray-500">EMAIL</th>
-                <th className="text-left py-4 px-6 font-medium text-sm text-gray-500">TÉLÉPHONE</th>
+                <th className="hidden sm:table-cell text-left py-4 px-6 font-medium text-sm text-gray-500">EMAIL</th>
+                <th className="hidden sm:table-cell text-left py-4 px-6 font-medium text-sm text-gray-500">TÉLÉPHONE</th>
                 <th className="text-left py-4 px-6 font-medium text-sm text-gray-500">STATUT</th>
                 <th className="text-left py-4 px-6 font-medium text-sm text-gray-500">SPÉCIALITÉ</th>
-                <th className="text-left py-4 px-6 font-medium text-sm text-gray-500">DATE D'EMBAUCHE</th>
+                <th className="hidden sm:table-cell text-left py-4 px-6 font-medium text-sm text-gray-500">DATE D'EMBAUCHE</th>
                 <th className="text-left py-4 px-6 font-medium text-sm text-gray-500">ACTIONS</th>
               </tr>
             </thead>
@@ -464,11 +464,11 @@ const Agents: React.FC = () => {
                       <span>{agent.name}</span>
                     </div>
                   </td>
-                  <td className="py-4 px-6 text-sm">{agent.email}</td>
-                  <td className="py-4 px-6 text-sm">{agent.phone}</td>
+                  <td className="hidden sm:table-cell py-4 px-6 text-sm">{agent.email}</td>
+                  <td className="hidden sm:table-cell py-4 px-6 text-sm">{agent.phone}</td>
                   <td className="py-4 px-6">{renderStatusBadge(agent.status)}</td>
                   <td className="py-4 px-6 text-sm">{agent.specialty}</td>
-                  <td className="py-4 px-6 text-sm">{agent.joinDate}</td>
+                  <td className="hidden sm:table-cell py-4 px-6 text-sm">{agent.joinDate}</td>
                   <td className="py-4 px-6">
                     <div className="relative">
                       <button 

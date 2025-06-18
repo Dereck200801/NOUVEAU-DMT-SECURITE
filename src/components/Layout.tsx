@@ -4,6 +4,8 @@ import Sidebar from './Sidebar';
 import { useAuth } from '../context/AuthContext';
 import TermsModal from './TermsModal';
 import { cn } from '../lib/utils';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faShieldAlt } from '@fortawesome/free-solid-svg-icons';
 
 interface LayoutProps {
   title?: string;
@@ -70,8 +72,20 @@ const Layout: React.FC<LayoutProps> = ({ title: defaultTitle, requireAuth = true
     <div className="flex h-screen">
       <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} collapsed={collapsed} setCollapsed={setCollapsed} />
       
-      <div className={cn("flex-1 transition-all duration-300", collapsed ? "md:ml-20" : "md:ml-64")}>
-        <main className="p-4 md:p-6">
+      <div className={cn("flex-1 flex flex-col transition-all duration-300", collapsed ? "md:ml-20" : "md:ml-64")}>
+        {/* Mobile top bar */}
+        <header className="flex items-center gap-4 p-4 bg-white/80 backdrop-blur-md border-b border-border md:hidden">
+          <button
+            className="text-oxford-blue text-xl focus:outline-none focus:ring-2 focus:ring-yale-blue rounded-lg bg-yale-blue/10 p-2"
+            onClick={toggleSidebar}
+            aria-label="Ouvrir le menu"
+          >
+            <FontAwesomeIcon icon={faShieldAlt} />
+          </button>
+          <h1 className="text-lg font-semibold text-oxford-blue flex-1 truncate">{getCurrentTitle()}</h1>
+        </header>
+
+        <main className="p-4 pt-20 md:pt-6 md:p-6 overflow-y-auto flex-1">
           <Outlet />
         </main>
       </div>

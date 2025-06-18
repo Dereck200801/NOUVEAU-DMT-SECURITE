@@ -106,10 +106,10 @@ const VisitorsPage: React.FC = () => {
           <thead className="bg-light text-sm text-gray-500">
             <tr>
               <th className="text-left py-3 px-6 font-medium">Visiteur</th>
-              <th className="text-left py-3 px-6 font-medium">Société</th>
-              <th className="text-left py-3 px-6 font-medium">Date</th>
-              <th className="text-left py-3 px-6 font-medium">Arrivée</th>
-              <th className="text-left py-3 px-6 font-medium">Hôte</th>
+              <th className="mobile-hide text-left py-3 px-6 font-medium">Société</th>
+              <th className="mobile-hide text-left py-3 px-6 font-medium">Date</th>
+              <th className="mobile-hide text-left py-3 px-6 font-medium">Arrivée</th>
+              <th className="mobile-hide text-left py-3 px-6 font-medium">Hôte</th>
               <th className="text-left py-3 px-6 font-medium">Statut</th>
               <th className="text-left py-3 px-6 font-medium">Actions</th>
             </tr>
@@ -122,10 +122,10 @@ const VisitorsPage: React.FC = () => {
                   <td className="py-3 px-6 flex items-center gap-2">
                     <FontAwesomeIcon icon={faDoorOpen} className="text-gray-400" /> {v.name}
                   </td>
-                  <td className="py-3 px-6">{v.company}</td>
-                  <td className="py-3 px-6">{v.visitDate}</td>
-                  <td className="py-3 px-6">{v.checkInTime ?? '—'}</td>
-                  <td className="py-3 px-6">{host ? host.name : '—'}</td>
+                  <td className="mobile-hide py-3 px-6">{v.company}</td>
+                  <td className="mobile-hide py-3 px-6">{v.visitDate}</td>
+                  <td className="mobile-hide py-3 px-6">{v.checkInTime ?? '—'}</td>
+                  <td className="mobile-hide py-3 px-6">{host ? host.name : '—'}</td>
                   <td className="py-3 px-6">{statusBadge(v.status)}</td>
                   <td className="py-3 px-6 flex gap-3">
                     {v.status === 'expected' && (

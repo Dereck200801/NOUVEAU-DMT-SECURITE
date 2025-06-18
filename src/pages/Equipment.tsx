@@ -81,10 +81,10 @@ const EquipmentPage: React.FC = () => {
           <thead className="bg-light text-sm text-gray-500">
             <tr>
               <th className="text-left py-3 px-6 font-medium">Nom</th>
-              <th className="text-left py-3 px-6 font-medium">Catégorie</th>
-              <th className="text-left py-3 px-6 font-medium">N° Série</th>
+              <th className="mobile-hide text-left py-3 px-6 font-medium">Catégorie</th>
+              <th className="mobile-hide text-left py-3 px-6 font-medium">N° Série</th>
               <th className="text-left py-3 px-6 font-medium">Statut</th>
-              <th className="text-left py-3 px-6 font-medium">Assigné à</th>
+              <th className="mobile-hide text-left py-3 px-6 font-medium">Assigné à</th>
               <th className="text-left py-3 px-6 font-medium">Actions</th>
             </tr>
           </thead>
@@ -96,10 +96,10 @@ const EquipmentPage: React.FC = () => {
                   <td className="py-3 px-6 flex items-center gap-2">
                     <FontAwesomeIcon icon={faBoxOpen} className="text-gray-400" /> {eq.name}
                   </td>
-                  <td className="py-3 px-6 capitalize">{eq.category}</td>
-                  <td className="py-3 px-6">{eq.serialNumber}</td>
+                  <td className="mobile-hide py-3 px-6 capitalize">{eq.category}</td>
+                  <td className="mobile-hide py-3 px-6">{eq.serialNumber}</td>
                   <td className="py-3 px-6">{statusBadge(eq.status)}</td>
-                  <td className="py-3 px-6">{emp ? emp.name : '—'}</td>
+                  <td className="mobile-hide py-3 px-6">{emp ? emp.name : '—'}</td>
                   <td className="py-3 px-6">
                     <button onClick={() => openEdit(eq)} className="text-yale-blue hover:text-berkeley-blue mr-3">
                       <FontAwesomeIcon icon={faEdit} />

@@ -10,7 +10,13 @@ export default {
       center: true,
       padding: "2rem",
       screens: {
+        xs: "100%",      // full width until 475px, then center progressively
+        sm: "640px",
+        md: "768px",
+        lg: "1024px",
+        xl: "1280px",
         "2xl": "1400px",
+        "3xl": "1920px",
       },
     },
     extend: {
@@ -115,6 +121,10 @@ export default {
         'gradient-bottom-right': 'linear-gradient(135deg, var(--tw-gradient-stops))',
         'gradient-top-left': 'linear-gradient(225deg, var(--tw-gradient-stops))',
         'gradient-bottom-left': 'linear-gradient(315deg, var(--tw-gradient-stops))',
+      },
+      screens: {
+        xs: "475px",
+        "3xl": "1920px",
       },
     },
   },
