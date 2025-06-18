@@ -25,6 +25,9 @@ jobs:
           node-version: 18
           cache: 'npm'
 
+      # Configure GitHub Pages (build metadata, etc.)
+      - uses: actions/configure-pages@v5
+
       - run: npm ci
 
       - run: npm run build
@@ -37,8 +40,8 @@ jobs:
     needs: build
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deploy.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - id: deployment
-        uses: actions/deploy-pages@v2 
+      - id: deploy
+        uses: actions/deploy-pages@v3 
