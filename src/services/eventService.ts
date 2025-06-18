@@ -58,27 +58,37 @@ export const eventService = {
   // Get events by month
   async getEventsByMonth(year: number, month: number): Promise<ApiResponse<Event[]>> {
     try {
-      console.log(`Fetching events for ${year}-${month} from API`);
-      // Format month to ensure it's always 2 digits
+      // Assurez-vous que le mois est toujours sur 2 chiffres
       const formattedMonth = month.toString().padStart(2, '0');
-      const url = `${API_URL}/events?date_like=${year}-${formattedMonth}`;
+
+      console.log(`Fetching events for ${year}-${formattedMonth} from API`);
+
+      // Utilise désormais l'endpoint REST dédié, compatible à la fois avec json-server (routes.json)
+      // et avec l'API Express (/api/events/month/:year/:month)
+      const url = `${API_URL}/events/month/${year}/${formattedMonth}`;
       console.log('API URL:', url);
-      
+
       const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`API returned status ${response.status}`);
+      }
+
       const data = await response.json();
-      console.log(`API response for ${year}-${month}:`, data);
-      
-      // Normalize dates in the response
+
+      // Normalise les dates dans la réponse
       const normalizedData = data.map((event: Event) => ({
         ...event,
         date: normalizeDate(event.date)
       }));
-      
-      console.log('Normalized data:', normalizedData);
+
       return { success: true, data: normalizedData };
     } catch (error) {
       console.error(`Error fetching events for ${year}-${month}:`, error);
-      return { success: false, message: 'Failed to fetch events for the specified month' };
+      return {
+        success: false,
+        message: 'Failed to fetch events for the specified month'
+      };
     }
   },
 
