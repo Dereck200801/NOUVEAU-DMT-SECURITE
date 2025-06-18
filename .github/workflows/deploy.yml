@@ -17,6 +17,9 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dmt-securite
     steps:
       - uses: actions/checkout@v4
 
@@ -34,7 +37,7 @@ jobs:
 
       - uses: actions/upload-pages-artifact@v2
         with:
-          path: dist
+          path: dmt-securite/dist
 
   deploy:
     needs: build
