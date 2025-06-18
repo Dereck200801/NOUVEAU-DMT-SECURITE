@@ -7,13 +7,16 @@ import {
   faEdit, 
   faTrash, 
   faEye,
-  faTimes
+  faTimes,
+  faSpinner
 } from '@fortawesome/free-solid-svg-icons';
 import AgentProfile from '../components/AgentProfile';
 import { Agent } from '../types/agent';
 import useKeyPress from '../hooks/useKeyPress';
 import ProfessionalCard from '../components/ProfessionalCard';
 import html2canvas from 'html2canvas';
+import agentService from '../services/agentService';
+import { useAgents as useAgentsContext } from '../context/AgentContext';
 
 // Sample data for agents
 const INITIAL_AGENTS_DATA: Agent[] = [
@@ -92,7 +95,10 @@ const INITIAL_AGENTS_DATA: Agent[] = [
 ];
 
 const Agents: React.FC = () => {
-  const [agents, setAgents] = useState<Agent[]>(INITIAL_AGENTS_DATA);
+  const { agents: contextAgents, updateAgent: updateAgentContext, refresh: refreshAgents } = useAgentsContext();
+
+  const [agents, setAgents] = useState<Agent[]>(contextAgents);
+  const [loading, setLoading] = useState<boolean>(contextAgents.length === 0);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [specialtyFilter, setSpecialtyFilter] = useState('all');
@@ -161,6 +167,19 @@ const Agents: React.FC = () => {
 
   // Ajouter la gestion de la touche Echap
   useKeyPress('Escape', () => setOpenMenuId(null));
+
+  // Synchroniser l'état local quand le contexte évolue
+  useEffect(() => {
+    setAgents(contextAgents);
+    setLoading(false);
+  }, [contextAgents]);
+
+  // L'ancien fetch est maintenant géré par le contexte, on se contente de rafraîchir au montage si nécessaire
+  useEffect(() => {
+    if (contextAgents.length === 0) {
+      refreshAgents();
+    }
+  }, [contextAgents, refreshAgents]);
 
   // Filter agents based on search term and filters
   const filteredAgents = agents.filter(agent => {
@@ -268,33 +287,48 @@ const Agents: React.FC = () => {
   };
 
   // Confirm delete
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (deleteConfirmation !== null) {
-      setAgents(agents.filter(agent => agent.id !== deleteConfirmation));
-      setDeleteConfirmation(null);
+      try {
+        await agentService.delete(deleteConfirmation);
+      } catch (error) {
+        console.error("Erreur lors de la suppression de l'agent:", error);
+      } finally {
+        setAgents(agents.filter(agent => agent.id !== deleteConfirmation));
+        setDeleteConfirmation(null);
+      }
     }
   };
 
   // Save agent (add or update)
-  const handleSaveAgent = () => {
+  const handleSaveAgent = async () => {
     if (isEditing && currentAgent) {
-      // Update existing agent
-      setAgents(agents.map(agent => 
-        agent.id === currentAgent.id 
-          ? { ...agent, ...formData } 
-          : agent
-      ));
+      // Update existing agent via API + contexte
+      try {
+        await updateAgentContext(currentAgent.id, formData);
+      } catch (error) {
+        console.error("Erreur lors de la mise à jour de l'agent:", error);
+      }
     } else {
-      // Add new agent
-      const newAgent: Agent = {
-        ...formData,
-        id: Math.max(...agents.map(a => a.id), 0) + 1
-      };
-      setAgents([...agents, newAgent]);
+      // Add new agent via API (hors contexte pour l'instant)
+      try {
+        const createdAgent = await agentService.create(formData);
+        await refreshAgents(); // Rafraîchir après création
 
-      // Open professional card modal for the newly created agent
-      setCardAgent(newAgent);
-      setShowCardModal(true);
+        // Open professional card modal for the newly created agent
+        setCardAgent(createdAgent);
+        setShowCardModal(true);
+      } catch (error) {
+        console.error("Erreur lors de la création de l'agent:", error);
+        // Fallback locale
+        const newAgent: Agent = {
+          ...formData,
+          id: Math.max(...agents.map(a => a.id), 0) + 1
+        };
+        setAgents([...agents, newAgent]);
+        setCardAgent(newAgent);
+        setShowCardModal(true);
+      }
     }
     setShowModal(false);
   };
@@ -332,6 +366,15 @@ const Agents: React.FC = () => {
       console.error('Erreur export carte:', error);
     }
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <FontAwesomeIcon icon={faSpinner} className="animate-spin text-accent text-4xl" />
+      </div>
+    );
+  }
 
   return (
     <div>

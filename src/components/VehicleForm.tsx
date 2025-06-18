@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import type { Vehicle, NewVehicle } from '../types/vehicle';
+import { useEmployees } from '../context/EmployeeContext';
+import type { Document as VehicleDocument } from '../types/agent';
 
 interface VehicleFormProps {
   vehicle?: Vehicle;
@@ -17,11 +19,52 @@ const VehicleForm: React.FC<VehicleFormProps> = ({ vehicle, isEdit, onSubmit, on
     mileage: vehicle?.mileage ?? 0,
     lastServiceDate: vehicle?.lastServiceDate ?? new Date().toISOString().split('T')[0],
     notes: vehicle?.notes ?? '',
+    assignedTo: vehicle?.assignedTo,
+    photoUrl: vehicle?.photoUrl ?? '',
+    documents: vehicle?.documents ?? [],
   });
+
+  const { employees } = useEmployees();
+
+  const [photoPreview, setPhotoPreview] = useState<string>(vehicle?.photoUrl ?? '');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setData((prev) => ({ ...prev, [name]: value }));
+    if (name === 'mileage') {
+      setData((prev) => ({ ...prev, [name]: Number(value) }));
+    } else if (name === 'assignedTo') {
+      setData((prev) => ({ ...prev, [name]: value ? Number(value) : undefined }));
+    } else {
+      setData((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const url = reader.result as string;
+      setPhotoPreview(url);
+      setData((prev) => ({ ...prev, photoUrl: url }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDocumentsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) return;
+    const newDocs: VehicleDocument[] = files.map((file, idx) => ({
+      id: Date.now() + idx,
+      name: file.name,
+      type: file.type || 'document',
+      date: new Date().toISOString().split('T')[0],
+      file,
+    }));
+    setData((prev) => ({
+      ...prev,
+      documents: [...(prev.documents ?? []), ...newDocs],
+    }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -101,6 +144,50 @@ const VehicleForm: React.FC<VehicleFormProps> = ({ vehicle, isEdit, onSubmit, on
                 onChange={handleChange}
                 className="border border-gray-300 rounded-lg px-3 py-2 w-full"
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Assigné à</label>
+              <select
+                name="assignedTo"
+                value={data.assignedTo ?? ''}
+                onChange={handleChange}
+                className="border border-gray-300 rounded-lg px-3 py-2 w-full"
+              >
+                <option value="">— Non assigné —</option>
+                {employees.map((emp) => (
+                  <option key={emp.id} value={emp.id}>
+                    {emp.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Photo du véhicule</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoChange}
+                className="border border-gray-300 rounded-lg px-3 py-2 w-full"
+              />
+              {photoPreview && (
+                <img src={photoPreview} alt="Prévisualisation" className="mt-2 h-32 object-contain rounded" />
+              )}
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Documents du véhicule</label>
+              <input
+                type="file"
+                multiple
+                onChange={handleDocumentsChange}
+                className="border border-gray-300 rounded-lg px-3 py-2 w-full"
+              />
+              {data.documents && data.documents.length > 0 && (
+                <ul className="mt-2 list-disc pl-5 text-sm text-gray-600 space-y-1">
+                  {data.documents.map((doc: VehicleDocument) => (
+                    <li key={doc.id}>{doc.name}</li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
           <div>

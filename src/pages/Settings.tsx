@@ -11,7 +11,8 @@ import {
   faKey,
   faTrash,
   faUsers,
-  faInfoCircle
+  faInfoCircle,
+  faBookOpen
 } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../context/AuthContext';
 import { ToastContainer, toast } from 'react-toastify';
@@ -24,6 +25,7 @@ import { AuthUser } from '../context/AuthContext';
 import { Role, AccreditationLevel, ROLE_PERMISSIONS } from '../auth/rbac';
 import { Permission } from '../auth/rbac';
 import { ThemeContext, Theme } from '../context/ThemeContext';
+import ProjectGuide from './ProjectGuide';
 
 const Settings: React.FC = () => {
   const { user, updateUserProfile, isLoading: isAuthLoading } = useAuth();
@@ -927,6 +929,13 @@ const Settings: React.FC = () => {
           </div>
         );
         
+      case 'guide':
+        return (
+          <div className="max-w-full">
+            <ProjectGuide />
+          </div>
+        );
+        
       case 'legal':
         return (
           <div className="prose max-w-none">
@@ -1162,6 +1171,14 @@ const Settings: React.FC = () => {
                     <span>Utilisateurs</span>
                   </button>
                 )}
+
+                <button
+                  className={`flex items-center px-4 py-3 rounded-lg mb-1 ${activeTab === 'guide' ? 'bg-accent text-white' : 'hover:bg-gray-200'}`}
+                  onClick={() => setActiveTab('guide')}
+                >
+                  <FontAwesomeIcon icon={faBookOpen} className="mr-3" />
+                  <span>Guide</span>
+                </button>
 
                 <button
                   className={`flex items-center px-4 py-3 rounded-lg mb-1 ${activeTab === 'legal' ? 'bg-accent text-white' : 'hover:bg-gray-200'}`}

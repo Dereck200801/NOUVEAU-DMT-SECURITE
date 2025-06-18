@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { useEmployees } from '../context/EmployeeContext';
+import { useAuth } from '../context/AuthContext';
 import type { Leave, NewLeave } from '../types/leave';
 
 interface LeaveFormProps {
@@ -16,10 +17,12 @@ const defaultData: NewLeave = {
   startDate: '',
   endDate: '',
   reason: '',
+  status: 'pending',
 };
 
 const LeaveForm: React.FC<LeaveFormProps> = ({ leave, onSubmit, onCancel, isEdit = false }) => {
   const { employees } = useEmployees();
+  const { user } = useAuth();
   const [formData, setFormData] = useState<NewLeave | Partial<Leave>>(defaultData);
 
   useEffect(() => {
@@ -35,6 +38,9 @@ const LeaveForm: React.FC<LeaveFormProps> = ({ leave, onSubmit, onCancel, isEdit
     e.preventDefault();
     onSubmit(formData);
   };
+
+  // Déterminer si l'utilisateur connecté est un administrateur
+  const isAdmin = user?.role === 'admin';
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -99,6 +105,21 @@ const LeaveForm: React.FC<LeaveFormProps> = ({ leave, onSubmit, onCancel, isEdit
               className="w-full border border-gray-300 rounded-lg px-3 py-2"
             />
           </div>
+          {isAdmin && (
+            <div>
+              <label className="block text-sm font-medium mb-1">Statut</label>
+              <select
+                name="status"
+                value={(formData as any).status ?? 'pending'}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2"
+              >
+                <option value="pending">En attente</option>
+                <option value="approved">Approuvé</option>
+                <option value="rejected">Rejeté</option>
+              </select>
+            </div>
+          )}
           <div className="flex justify-end gap-3 pt-2">
             <button type="button" onClick={onCancel} className="px-4 py-2 border border-gray-300 rounded-lg text-sm">
               Annuler

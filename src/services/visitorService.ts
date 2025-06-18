@@ -34,7 +34,8 @@ const visitorService = {
     await delay(150);
     const visitor: Visitor = {
       id: VISITORS.length ? Math.max(...VISITORS.map((v) => v.id)) + 1 : 1,
-      status: 'expected',
+      status: 'checked_in',
+      checkInTime: data.checkInTime ?? new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       ...data,
     } as Visitor;
     VISITORS.push(visitor);

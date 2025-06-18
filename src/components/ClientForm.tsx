@@ -25,8 +25,9 @@ const ClientForm = ({ client, onSubmit, onCancel, isEdit = false, existingTypes 
   }, [client]);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+    const parsedValue = type === 'number' ? Number(value) : value;
+    setFormData(prev => ({ ...prev, [name]: parsedValue }));
   };
   
   const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -148,27 +149,43 @@ const ClientForm = ({ client, onSubmit, onCancel, isEdit = false, existingTypes 
                 name="phone"
                 value={formData.phone || ''}
                 onChange={handleChange}
+                pattern="^[0-9+\s-]{6,}$"
+                title="Veuillez entrer un numéro de téléphone valide (au moins 6 chiffres)"
                 className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                 required
               />
             </div>
             
-            {/* Missions actives (seulement en mode édition) */}
-            {isEdit && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Missions actives
-                </label>
-                <input
-                  type="number"
-                  name="activeMissions"
-                  value={formData.activeMissions || 0}
-                  onChange={handleChange}
-                  min="0"
-                  className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
-                />
-              </div>
-            )}
+            {/* Missions actives */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Missions actives
+              </label>
+              <input
+                type="number"
+                name="activeMissions"
+                value={formData.activeMissions || 0}
+                onChange={handleChange}
+                min="0"
+                className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+              />
+            </div>
+            
+            {/* Total des missions */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Total des missions
+              </label>
+              <input
+                type="number"
+                name="totalMissions"
+                value={formData.totalMissions || 0}
+                onChange={handleChange}
+                min="0"
+                className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                required
+              />
+            </div>
             
             {/* Adresse */}
             <div className="col-span-2">

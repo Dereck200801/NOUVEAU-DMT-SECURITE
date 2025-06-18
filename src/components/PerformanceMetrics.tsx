@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faChartLine, 
@@ -9,63 +9,17 @@ import {
   faSearch,
   faSort
 } from '@fortawesome/free-solid-svg-icons';
-import metricsService from '../services/metricsService';
-import { PerformanceMetric, MetricsFilters } from '../types/metrics';
+import { PerformanceMetric } from '../types/metrics';
+import useMetrics from '../hooks/useMetrics';
 
 const PerformanceMetrics: React.FC = () => {
-  const [metrics, setMetrics] = useState<PerformanceMetric[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState<string>('');
-  const [filters, setFilters] = useState<MetricsFilters>({});
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchFilter, setSearchFilter] = useState('');
 
-  useEffect(() => {
-    const fetchMetrics = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await metricsService.getAll(filters);
-        
-        // S'assurer que data est un tableau
-        if (Array.isArray(data)) {
-          setMetrics(data);
-          setError(null);
-        } else {
-          console.error('Les données reçues ne sont pas un tableau:', data);
-          setMetrics([]);
-          setError('Format de données incorrect - Veuillez contacter le support technique');
-        }
-      } catch (err: any) {
-        console.error('Erreur lors de la récupération des métriques:', err);
-        
-        // Fournir un message d'erreur plus informatif basé sur le type d'erreur
-        if (err.response) {
-          // La requête a été faite et le serveur a répondu avec un code d'état en dehors de la plage 2xx
-          setError(`Erreur serveur: ${err.response.status} - ${err.response.data.message || 'Veuillez réessayer plus tard'}`);
-        } else if (err.request) {
-          // La requête a été faite mais aucune réponse n'a été reçue
-          setError('Impossible de se connecter au serveur. Vérifiez votre connexion internet.');
-        } else {
-          // Une erreur s'est produite lors de la configuration de la requête
-          setError(`Erreur de chargement: ${err.message}`);
-        }
-        
-        setMetrics([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchMetrics();
-  }, [filters]);
+  const { metrics, loading, error } = useMetrics({ search: searchFilter || undefined });
 
   // Fonction pour appliquer les filtres
-  const applyFilters = () => {
-    setFilters(prev => ({
-      ...prev,
-      search: searchTerm || undefined
-    }));
-  };
+  const applySearch = () => setSearchFilter(searchTerm);
 
   // Fonction pour gérer la recherche
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -75,7 +29,7 @@ const PerformanceMetrics: React.FC = () => {
   // Fonction pour gérer la soumission du formulaire de recherche
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    applyFilters();
+    applySearch();
   };
 
   // Fonction pour obtenir la couleur en fonction du score
@@ -117,7 +71,7 @@ const PerformanceMetrics: React.FC = () => {
           </div>
           <button 
             type="button"
-            onClick={() => setFilters({})}
+            onClick={() => setSearchFilter('')}
             className="ml-2 bg-light text-gray-600 rounded-lg px-3 py-2 text-sm hover:bg-gray-200 transition flex items-center"
           >
             <FontAwesomeIcon icon={faSort} className="mr-1" />

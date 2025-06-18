@@ -43,6 +43,10 @@
     /* Override Bootstrap default font variables */
     --bs-font-sans-serif: 'Space Grotesk', sans-serif;
     --bs-body-font-family: 'Space Grotesk', sans-serif;
+
+    /* Couleurs de barre de défilement */
+    --scrollbar-thumb: rgba(19, 64, 116, 0.25); /* Yale blue subtil */
+    --scrollbar-thumb-hover: rgba(19, 64, 116, 0.45);
   }
  
   .dark {
@@ -79,6 +83,9 @@
     --border: 209 32% 66%;
     --input: 209 32% 66%;
     --ring: 212 72% 26%;
+
+    --scrollbar-thumb: rgba(255, 255, 255, 0.15);
+    --scrollbar-thumb-hover: rgba(255, 255, 255, 0.35);
   }
 }
  
@@ -349,7 +356,7 @@ body {
 /* Amélioration de la barre de défilement dans la sidebar */
 .sidebar nav {
   scrollbar-width: thin; /* Firefox */
-  scrollbar-color: rgba(19, 64, 116, 0.3) transparent; /* thumb & track */
+  scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 
 .sidebar nav::-webkit-scrollbar {
@@ -361,13 +368,13 @@ body {
 }
 
 .sidebar nav::-webkit-scrollbar-thumb {
-  background-color: rgba(19, 64, 116, 0.3); /* Yale blue with opacity */
-  border-radius: 9999px; /* fully rounded */
+  background-color: var(--scrollbar-thumb);
+  border-radius: 9999px;
   transition: background-color 0.2s ease;
 }
 
 .sidebar nav:hover::-webkit-scrollbar-thumb {
-  background-color: rgba(19, 64, 116, 0.55);
+  background-color: var(--scrollbar-thumb-hover);
 }
 
 .dark .sidebar nav::-webkit-scrollbar-thumb {
@@ -376,4 +383,44 @@ body {
 
 .dark .sidebar nav:hover::-webkit-scrollbar-thumb {
   background-color: rgba(255, 255, 255, 0.35);
+}
+
+/* Global scrollbar style */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb);
+  border-radius: 9999px;
+  transition: background-color 0.2s ease;
+}
+
+*:hover::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb-hover);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.dark *:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.35);
+}
+
+/* Masquer les boutons (crochets) en haut/bas ou gauche/droite */
+::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
 }

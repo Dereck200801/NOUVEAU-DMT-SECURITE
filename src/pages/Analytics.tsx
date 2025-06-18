@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -18,9 +18,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 // Components & services
 import PerformanceMetrics from '../components/PerformanceMetrics';
-import metricsService from '../services/metricsService';
-// Types
-import { PerformanceMetric } from '../types/metrics';
+import useMetrics from '../hooks/useMetrics';
 
 // Register ChartJS components once
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend);
@@ -55,16 +53,19 @@ const AnalyticsStatCard: React.FC<StatCardProps> = ({
 );
 
 const Analytics: React.FC = () => {
-  const [metrics, setMetrics] = useState<PerformanceMetric[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  // Filtre dynamique
   const [filters, setFilters] = useState<{
     type: string;
     category: string;
     period: string;
     search: string;
   }>({ type: '', category: '', period: '', search: '' });
+
+  const { metrics, loading, error } = useMetrics({
+    type: filters.type || undefined,
+    category: filters.category || undefined,
+    period: filters.period || undefined,
+    search: filters.search || undefined,
+  });
 
   // Options statiques (peuvent être récupérées dynamiquement plus tard)
   const TYPE_OPTIONS = ['mission', 'incident', 'agent', 'equipment'];
@@ -75,34 +76,6 @@ const Analytics: React.FC = () => {
     'Ressources matérielles',
   ];
   const PERIOD_OPTIONS = ['Dernier mois', 'Dernier trimestre'];
-
-  // Récupération des métriques en fonction des filtres
-  useEffect(() => {
-    const fetchMetrics = async () => {
-      try {
-        setLoading(true);
-        const data = await metricsService.getAll({
-          type: filters.type || undefined,
-          category: filters.category || undefined,
-          period: filters.period || undefined,
-          search: filters.search || undefined,
-        });
-        if (Array.isArray(data)) {
-          setMetrics(data);
-          setError(null);
-        } else {
-          throw new Error('Format de données inattendu');
-        }
-      } catch (err: any) {
-        console.error('Erreur lors du chargement des métriques:', err);
-        setError('Impossible de charger les métriques.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchMetrics();
-  }, [filters]);
 
   // Derived statistics
   const totalMetrics = metrics.length;

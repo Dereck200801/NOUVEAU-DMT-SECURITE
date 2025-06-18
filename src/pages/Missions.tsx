@@ -15,17 +15,18 @@ import {
 import MissionAgents from '../components/MissionAgents';
 import useKeyPress from '../hooks/useKeyPress';
 import type { Mission, MissionFormData } from '../types/mission';
-import AGENTS_DATA from '../data/agents';
+import { Agent } from '../types/agent';
+import { useClients } from '../context/ClientContext';
 import { eventService, type CreateEventDTO, type Event as CalendarEvent } from '../services/eventService';
 import { normalizeDate } from '../utils/dateUtils';
+import { useAgents } from '../context/AgentContext';
 
-// Liste globale des agents disponibles (à remplacer par un appel API dans une vraie appli)
-const AVAILABLE_AGENTS = AGENTS_DATA;
+// ---
+// Chargement dynamique des données (agents & clients)
 
 const Missions = () => {
   const [missions, setMissions] = useState<Mission[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState<'create' | 'edit' | 'delete' | 'view'>('create');
   const [currentMission, setCurrentMission] = useState<Mission | null>(null);
@@ -43,6 +44,16 @@ const Missions = () => {
   });
   const menuRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
   const buttonRefs = useRef<{ [key: number]: HTMLButtonElement | null }>({});
+  const { clients: clientList } = useClients();
+  const { agents: contextAgents, detachFromMission, reconcileStatuses } = useAgents();
+
+  // Liste des agents disponibles issue du contexte
+  const [availableAgents, setAvailableAgents] = useState<Agent[]>(contextAgents);
+
+  // Synchroniser quand le contexte change
+  useEffect(() => {
+    setAvailableAgents(contextAgents);
+  }, [contextAgents]);
 
   // Charger les missions depuis le calendrier (événements de type "mission")
   useEffect(() => {
@@ -62,6 +73,14 @@ const Missions = () => {
     return `${d}/${m}/${y}`;
   }
 
+  // Convertit n'importe quel format reçu (ISO ou DD/MM/YYYY) vers ISO standard YYYY-MM-DD
+  function toIso(dateStr: string): string {
+    if (!dateStr) return normalizeDate(new Date());
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return normalizeDate(dateStr);
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) return frToIso(dateStr);
+    return normalizeDate(dateStr);
+  }
+
   const loadMissionsFromCalendar = async () => {
     try {
       const resp = await eventService.getEvents();
@@ -73,29 +92,56 @@ const Missions = () => {
             title: ev.title,
             client: ev.client || '',
             location: ev.location || '',
-            startDate: isoToFr(ev.date),
-            endDate: ev.endDate ? isoToFr(ev.endDate) : isoToFr(ev.date),
+            startDate: ev.date,
+            endDate: ev.endDate ?? ev.date,
             status: ev.status || 'pending',
             agents: ev.agents || ev.participants?.map(p => Number(p)) || [],
             description: ev.description || ''
           }));
         setMissions(missionsFromEvents);
+
+        // -- Synchroniser les statuts des agents --
+        const activeIds = missionsFromEvents
+          .filter((m) => m.status === 'active')
+          .flatMap((m) => m.agents || []);
+
+        reconcileStatuses(activeIds);
       }
     } catch (e) {
       console.error('Erreur chargement missions depuis calendrier', e);
     }
   };
 
-  // Filter missions based on search term and status filter
-  const filteredMissions = missions.filter(mission => {
-    const matchesSearch = 
+  // --- Filtrage par recherche puis classement par statut et date ---
+  const statusPriority: Record<string, number> = {
+    active: 1, // En cours
+    in_progress: 1,
+    planned: 2, // Planifiée
+    pending: 3, // En attente
+    cancelled: 4, // Annulée
+    completed: 5, // Terminée
+  };
+
+  const searchFiltered = missions.filter((mission) => {
+    return (
       mission.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       mission.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      mission.location.toLowerCase().includes(searchTerm.toLowerCase());
-      
-    const matchesStatus = statusFilter === 'all' || mission.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
+      mission.location.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
+
+  // Ordre de tri par date (desc = plus récent d'abord)
+  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
+
+  const orderedMissions = [...searchFiltered].sort((a, b) => {
+    const priorityA = statusPriority[a.status] ?? 99;
+    const priorityB = statusPriority[b.status] ?? 99;
+    if (priorityA !== priorityB) return priorityA - priorityB;
+
+    // Même statut : trier par date
+    const dateA = new Date(frToIso(a.startDate));
+    const dateB = new Date(frToIso(b.startDate));
+    return sortOrder === 'desc' ? dateB.getTime() - dateA.getTime() : dateA.getTime() - dateB.getTime();
   });
 
   // Open modal with specified type
@@ -105,7 +151,11 @@ const Missions = () => {
     
     if (mission && (type === 'edit' || type === 'delete' || type === 'view')) {
       setCurrentMission(mission);
-      setFormData({ ...mission });
+      setFormData({
+        ...mission,
+        startDate: mission.startDate,
+        endDate: mission.endDate,
+      });
     } else {
       setCurrentMission(null);
       setFormData({
@@ -145,14 +195,14 @@ const Missions = () => {
     
     const dto: CreateEventDTO = {
       title: formData.title,
-      date: normalizeDate(frToIso(formData.startDate)),
+      date: toIso(formData.startDate),
       time: '09:00',
       type: 'mission',
       description: formData.description,
       location: formData.location,
       participants: (formData.agents || []).map(id => String(id)),
       client: formData.client,
-      endDate: normalizeDate(frToIso(formData.endDate)),
+      endDate: toIso(formData.endDate),
       status: formData.status,
       agents: formData.agents
     };
@@ -300,6 +350,41 @@ const Missions = () => {
     );
   };
   
+  const handleEndMission = async (mission: Mission) => {
+    if (!window.confirm(`Marquer la mission "${mission.title}" comme terminée ?`)) return;
+    try {
+      // Détacher tous les agents associés
+      await Promise.all((mission.agents || []).map(id => detachFromMission(id)));
+
+      // Passer le statut à completed côté calendrier
+      const dto: CreateEventDTO = {
+        title: mission.title,
+        date: toIso(mission.startDate),
+        time: '09:00',
+        type: 'mission',
+        description: mission.description,
+        location: mission.location,
+        participants: [],
+        client: mission.client,
+        endDate: toIso(mission.endDate),
+        status: 'completed',
+        agents: [],
+      };
+      await eventService.updateEvent(mission.id, dto);
+      await loadMissionsFromCalendar();
+    } catch (err) {
+      console.error('Erreur lors de la fin de mission', err);
+    }
+  };
+
+  const statusSections = [
+    { key: 'active', label: 'En cours' },
+    { key: 'planned', label: 'Planifiée' },
+    { key: 'pending', label: 'En attente' },
+    { key: 'cancelled', label: 'Annulée' },
+    { key: 'completed', label: 'Terminée' },
+  ];
+
   return (
     <div>
       <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -330,76 +415,106 @@ const Missions = () => {
             />
           </div>
           
-          {/* Status filter */}
+          {/* Tri par date */}
           <div>
             <select
               className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value as 'desc' | 'asc')}
             >
-              <option value="all">Tous les statuts</option>
-              <option value="in_progress">En cours</option>
-              <option value="planned">Planifiée</option>
-              <option value="completed">Terminée</option>
-              <option value="pending">En attente</option>
+              <option value="desc">Plus récentes d'abord</option>
+              <option value="asc">Plus anciennes d'abord</option>
             </select>
           </div>
         </div>
       </div>
       
-      {/* Missions grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredMissions.map((mission) => (
-          <div key={mission.id} className="bg-white rounded-2xl shadow-lg overflow-hidden">
-            <div className="p-6">
-              <div className="flex justify-between items-start mb-4">
-                <h3 className="font-bold text-lg">{mission.title}</h3>
-                {renderActionMenu(mission)}
-              </div>
-              
-              <div className="mb-4">
-                <p className="text-gray-600 text-sm mb-2">{mission.description}</p>
-                <div className="mt-4">{renderStatusBadge(mission.status)}</div>
-              </div>
-              
-              <div className="border-t border-gray-100 pt-4">
-                <div className="flex items-center text-sm text-gray-500 mb-2">
-                  <FontAwesomeIcon icon={faMapMarkerAlt} className="mr-2 text-gray-400" />
-                  {mission.location}
+      {/* Missions par section */}
+      {statusSections.map(({ key, label }) => {
+        const sectionMissions = orderedMissions.filter((m) => {
+          if (key === 'active') return m.status === 'active' || m.status === 'in_progress';
+          return m.status === key;
+        });
+        if (sectionMissions.length === 0) return null;
+        return (
+          <div key={key} className="mb-10">
+            <h2 className="text-xl font-semibold mb-4">{label}</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {sectionMissions.map((mission) => (
+                <div key={mission.id} className="bg-white rounded-2xl shadow-lg overflow-hidden">
+                  <div className="p-6">
+                    <div className="flex justify-between items-start mb-4">
+                      <h3 className="font-bold text-lg">{mission.title}</h3>
+                      {renderActionMenu(mission)}
+                    </div>
+                    <div className="mb-4">
+                      <p className="text-gray-600 text-sm mb-2">{mission.description}</p>
+                      <div className="mt-4">{renderStatusBadge(mission.status)}</div>
+                    </div>
+                    <div className="border-t border-gray-100 pt-4">
+                      <div className="flex items-center text-sm text-gray-500 mb-2">
+                        <FontAwesomeIcon icon={faMapMarkerAlt} className="mr-2 text-gray-400" />
+                        {mission.location}
+                      </div>
+                      <div className="flex items-center text-sm text-gray-500 mb-2">
+                        <FontAwesomeIcon icon={faCalendarAlt} className="mr-2 text-gray-400" />
+                        {isoToFr(mission.startDate)} - {isoToFr(mission.endDate)}
+                      </div>
+                      <div className="flex items-center text-sm text-gray-500">
+                        <FontAwesomeIcon icon={faUserShield} className="mr-2 text-gray-400" />
+                        {(mission.agents || []).length} agent{(mission.agents || []).length > 1 ? 's' : ''} assigné{(mission.agents || []).length > 1 ? 's' : ''}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 px-6 py-3 flex justify-between items-center">
+                    <span className="text-sm font-medium">{mission.client}</span>
+                    {mission.status === 'completed' ? (
+                      <span className="text-success text-sm font-semibold select-none">Mission terminée</span>
+                    ) : mission.status === 'active' || mission.status === 'in_progress' ? (
+                      <div className="flex items-center gap-4">
+                        <button
+                          onClick={() => {
+                            setCurrentMission(mission);
+                            setShowAgentsModal(true);
+                          }}
+                          className="text-accent hover:text-blue-700 text-sm font-medium"
+                        >
+                          Voir les agents
+                        </button>
+                        <button
+                          onClick={() => handleEndMission(mission)}
+                          className="text-danger hover:text-red-700 text-sm font-medium"
+                        >
+                          Fin de la mission
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-4">
+                        <button
+                          onClick={() => {
+                            setCurrentMission(mission);
+                            setShowAgentsModal(true);
+                          }}
+                          className="text-accent hover:text-blue-700 text-sm font-medium"
+                        >
+                          Voir les agents
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div className="flex items-center text-sm text-gray-500 mb-2">
-                  <FontAwesomeIcon icon={faCalendarAlt} className="mr-2 text-gray-400" />
-                  {mission.startDate} - {mission.endDate}
-                </div>
-                <div className="flex items-center text-sm text-gray-500">
-                  <FontAwesomeIcon icon={faUserShield} className="mr-2 text-gray-400" />
-                  {(mission.agents || []).length} agent{(mission.agents || []).length > 1 ? 's' : ''} assigné{(mission.agents || []).length > 1 ? 's' : ''}
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-gray-50 px-6 py-3 flex justify-between items-center">
-              <span className="text-sm font-medium">{mission.client}</span>
-              <button 
-                onClick={() => {
-                  setCurrentMission(mission);
-                  setShowAgentsModal(true);
-                }}
-                className="text-accent hover:text-blue-700 text-sm font-medium"
-              >
-                Voir les agents
-              </button>
+              ))}
             </div>
           </div>
-        ))}
+        );
+      })}
 
-        {filteredMissions.length === 0 && (
-          <div className="col-span-3 text-center py-10">
-            <p className="text-gray-500">Aucune mission ne correspond à votre recherche</p>
-          </div>
-        )}
-      </div>
-      
+      {orderedMissions.length === 0 && (
+        <div className="text-center py-10">
+          <p className="text-gray-500">Aucune mission ne correspond à votre recherche</p>
+        </div>
+      )}
+
       {/* Pagination */}
       <div className="mt-8 flex items-center justify-center">
         <div className="flex items-center space-x-2">
@@ -485,14 +600,18 @@ const Missions = () => {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700">Client</label>
-                      <input
-                        type="text"
+                      <select
                         name="client"
                         value={formData.client || ''}
                         onChange={handleInputChange}
                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
                         required
-                      />
+                      >
+                        <option value="">Sélectionner un client</option>
+                        {clientList.map((c) => (
+                          <option key={c.id} value={c.name}>{c.name}</option>
+                        ))}
+                      </select>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700">Lieu</label>
@@ -509,11 +628,10 @@ const Missions = () => {
                       <div>
                         <label className="block text-sm font-medium text-gray-700">Date de début</label>
                         <input
-                          type="text"
+                          type="date"
                           name="startDate"
                           value={formData.startDate || ''}
                           onChange={handleInputChange}
-                          placeholder="JJ/MM/AAAA"
                           className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
                           required
                         />
@@ -521,11 +639,10 @@ const Missions = () => {
                       <div>
                         <label className="block text-sm font-medium text-gray-700">Date de fin</label>
                         <input
-                          type="text"
+                          type="date"
                           name="endDate"
                           value={formData.endDate || ''}
                           onChange={handleInputChange}
-                          placeholder="JJ/MM/AAAA"
                           className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
                           required
                         />
@@ -556,9 +673,13 @@ const Missions = () => {
                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
                         size={5}
                       >
-                        {AVAILABLE_AGENTS.map(agent => (
-                          <option key={agent.id} value={agent.id}>
-                            {agent.name} ({agent.badge})
+                        {availableAgents.map(agent => (
+                          <option
+                            key={agent.id}
+                            value={agent.id}
+                            disabled={agent.status === 'on_mission' && !(formData.agents||[]).includes(agent.id)}
+                          >
+                            {agent.name} ({agent.badge}) {agent.status==='on_mission' ? ' - occupé' : ''}
                           </option>
                         ))}
                       </select>
@@ -613,21 +734,21 @@ const Missions = () => {
           missionId={currentMission.id}
           missionTitle={currentMission.title}
           assignedAgents={currentMission.agents || []}
-          availableAgents={AVAILABLE_AGENTS}
+          availableAgents={availableAgents}
           onSave={async (selectedIds) => {
             if (currentMission) {
               try {
                 // Récupérer l'événement existant
                 const dto: CreateEventDTO = {
                   title: currentMission.title,
-                  date: normalizeDate(frToIso(currentMission.startDate)),
+                  date: toIso(currentMission.startDate),
                   time: '09:00',
                   type: 'mission',
                   description: currentMission.description,
                   location: currentMission.location,
                   participants: selectedIds.map(id => String(id)),
                   client: currentMission.client,
-                  endDate: normalizeDate(frToIso(currentMission.endDate)),
+                  endDate: toIso(currentMission.endDate),
                   status: currentMission.status,
                   agents: selectedIds
                 };

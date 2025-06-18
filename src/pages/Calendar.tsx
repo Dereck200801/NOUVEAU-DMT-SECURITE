@@ -22,6 +22,7 @@ const Calendar: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const calendarRef = useRef<any>(null);
   const { addNotification } = useNotifications();
+  const [jumpMonth, setJumpMonth] = useState<string>('');
 
   // Charger les événements pour un mois donné (par défaut le mois actuel)
   const loadEvents = async (year?: number, month?: number) => {
@@ -65,22 +66,52 @@ const Calendar: React.FC = () => {
 
   // Convert internal events to FullCalendar format
   const getFormattedInternalEvents = () => {
-    return events.map(event => ({
-      id: String(event.id),
-      title: event.title,
-      start: `${event.date}T${event.time}:00`,
-      end: event.endTime ? `${event.date}T${event.endTime}:00` : undefined,
-      location: event.location,
-      extendedProps: {
-        type: event.type,
-        participants: event.participants,
-        source: 'internal'
-      },
-      color: event.type === 'mission' ? '#FF5722' : 
-             event.type === 'formation' ? '#4CAF50' : 
-             event.type === 'reunion' ? '#FFC107' : 
-             '#9E9E9E'
-    }));
+    const fcEvents: any[] = [];
+
+    events.forEach(event => {
+      // Évènement principal (début)
+      fcEvents.push({
+        id: String(event.id),
+        title: event.title,
+        start: `${event.date}T${event.time}:00`,
+        end: event.endTime ? `${event.date}T${event.endTime}:00` : undefined,
+        location: event.location,
+        extendedProps: {
+          type: event.type,
+          participants: event.participants,
+          source: 'internal'
+        },
+        color: event.type === 'mission' ? '#FF5722' : 
+               event.type === 'formation' ? '#4CAF50' : 
+               event.type === 'reunion' ? '#FFC107' : 
+               '#9E9E9E'
+      });
+
+      // Si l'évènement possède une date de fin distincte, créer un marqueur "Fin de ..."
+      if (event.endDate && event.endDate !== event.date) {
+        fcEvents.push({
+          id: `${event.id}-end`,
+          title: `Fin de ${event.title}`,
+          start: `${event.endDate}T${event.time}:00`,
+          end: undefined,
+          location: event.location,
+          extendedProps: {
+            type: event.type,
+            participants: event.participants,
+            source: 'internal',
+            isEndMarker: true,
+            originalId: event.id,
+          },
+          color: event.type === 'mission' ? '#FF5722' : 
+                 event.type === 'formation' ? '#4CAF50' : 
+                 event.type === 'reunion' ? '#FFC107' : 
+                 '#9E9E9E',
+          textColor: '#555',
+        });
+      }
+    });
+
+    return fcEvents;
   };
 
   // Retourne les événements internes formatés pour FullCalendar
@@ -175,6 +206,10 @@ const Calendar: React.FC = () => {
           message: 'Événement supprimé avec succès'
         });
         await loadEvents();
+        // Close modal and reset selections after deletion
+        setShowModal(false);
+        setSelectedEvent(undefined);
+        setSelectedDate(undefined);
       } catch (error) {
         addNotification({
           type: 'danger',
@@ -185,11 +220,40 @@ const Calendar: React.FC = () => {
     }
   };
 
+  // Fonction pour naviguer rapidement vers un mois/année sélectionné
+  const handleJumpMonth = () => {
+    if (!jumpMonth) return;
+    const [yearStr, monthStr] = jumpMonth.split('-');
+    const year = Number(yearStr);
+    const month = Number(monthStr); // 1-12
+    if (!year || !month) return;
+
+    const targetDate = new Date(year, month - 1, 1);
+    // Naviguer dans FullCalendar
+    calendarRef.current?.getApi()?.gotoDate(targetDate);
+    // Recharger les événements pour le mois cible
+    loadEvents(year, month);
+  };
+
   return (
     <div className="relative">
       <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <h1 className="text-2xl font-bold">Calendrier</h1>
         <div className="flex items-center gap-2">
+          {/* Sélecteur de mois pour navigation rapide */}
+          <input
+            type="month"
+            value={jumpMonth}
+            onChange={(e) => setJumpMonth(e.target.value)}
+            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
+          />
+          <button
+            onClick={handleJumpMonth}
+            className="bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-3 rounded-lg text-sm transition-colors duration-200"
+          >
+            Aller
+          </button>
+
           <button 
             className="bg-accent hover:bg-blue-700 text-white py-2 px-4 rounded-lg flex items-center transition-colors duration-200"
             onClick={() => {
@@ -260,6 +324,7 @@ const Calendar: React.FC = () => {
           setSelectedDate(undefined);
         }}
         onSave={handleSaveEvent}
+        onDelete={handleDeleteEvent}
         event={selectedEvent}
         selectedDate={selectedDate}
       />

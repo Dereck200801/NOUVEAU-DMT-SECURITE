@@ -20,4 +20,5 @@ export interface NewVisitor {
   hostId?: number;
   purpose?: string;
   badgeNumber?: string;
+  checkInTime?: string;
 } 

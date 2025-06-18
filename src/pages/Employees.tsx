@@ -3,6 +3,7 @@ import { useEmployees } from '../context/EmployeeContext';
 import EmployeeCard from '../components/EmployeeCard';
 import type { Employee, NewEmployee } from '../types/employee';
 import EmployeeForm from '../components/EmployeeForm';
+import EmployeeDetails from '../components/EmployeeDetails';
 
 const Employees: React.FC = () => {
   const { employees, add, update, remove } = useEmployees();
@@ -77,7 +78,15 @@ const Employees: React.FC = () => {
       </div>
 
       {mode === 'view' && selected && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center text-white">Vue détaillée (à implémenter)</div>
+        <EmployeeDetails
+          employee={selected}
+          onClose={() => setMode(null)}
+          onEdit={() => open('edit', selected)}
+          onDelete={() => {
+            remove(selected.id);
+            setMode(null);
+          }}
+        />
       )}
       {mode === 'create' && (
         <EmployeeForm

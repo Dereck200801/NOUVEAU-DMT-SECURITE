@@ -12,7 +12,7 @@ export interface Event {
   participants?: string[];
   client?: string;
   endDate?: string;
-  status?: 'pending' | 'active' | 'completed' | 'cancelled';
+  status?: 'pending' | 'active' | 'planned' | 'in_progress' | 'completed' | 'cancelled';
   agents?: number[];
 }
 
@@ -26,7 +26,7 @@ export interface CreateEventDTO {
   participants?: string[];
   client?: string;
   endDate?: string;
-  status?: 'pending' | 'active' | 'completed' | 'cancelled';
+  status?: 'pending' | 'active' | 'planned' | 'in_progress' | 'completed' | 'cancelled';
   agents?: number[];
 }
 

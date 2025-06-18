@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faEdit, faTrash, faDoorOpen } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faEdit, faTrash, faDoorOpen, faSignOutAlt, faSignInAlt } from '@fortawesome/free-solid-svg-icons';
 import { useVisitors } from '../context/VisitorContext';
 import { useEmployees } from '../context/EmployeeContext';
 import VisitorForm from '../components/VisitorForm';
 import type { Visitor, NewVisitor } from '../types/visitor';
+import { Link } from 'react-router-dom';
 
 const VisitorsPage: React.FC = () => {
   const { visitors, add, update, remove } = useVisitors();
@@ -24,7 +25,24 @@ const VisitorsPage: React.FC = () => {
     closeModal();
   };
 
+  const handleCheckOut = async (visitor: Visitor) => {
+    if (visitor.status !== 'checked_in') return;
+    await update(visitor.id, {
+      status: 'checked_out',
+      checkOutTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    });
+  };
+
+  const handleCheckIn = async (visitor: Visitor) => {
+    if (visitor.status !== 'expected') return;
+    await update(visitor.id, {
+      status: 'checked_in',
+      checkInTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    });
+  };
+
   const filtered = visitors.filter((v) => {
+    if (v.status === 'checked_out') return false;
     const term = search.toLowerCase();
     const match =
       v.name.toLowerCase().includes(term) ||
@@ -47,7 +65,15 @@ const VisitorsPage: React.FC = () => {
   return (
     <div>
       <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <h1 className="text-2xl font-bold">Portail Visiteurs</h1>
+        <div className="flex items-center gap-4">
+          <h1 className="text-2xl font-bold">Portail Visiteurs</h1>
+          <Link
+            to="/visitors/history"
+            className="text-sm text-yale-blue hover:underline whitespace-nowrap"
+          >
+            Voir l'historique
+          </Link>
+        </div>
         <button onClick={openCreate} className="bg-yale-blue hover:bg-berkeley-blue text-white py-2 px-4 rounded-lg flex items-center">
           <FontAwesomeIcon icon={faPlus} className="mr-2" /> Nouveau visiteur
         </button>
@@ -70,7 +96,6 @@ const VisitorsPage: React.FC = () => {
           <option value="all">Tous les statuts</option>
           <option value="expected">Attendu</option>
           <option value="checked_in">Enregistré</option>
-          <option value="checked_out">Sorti</option>
           <option value="blacklisted">Blacklisté</option>
         </select>
       </div>
@@ -83,6 +108,7 @@ const VisitorsPage: React.FC = () => {
               <th className="text-left py-3 px-6 font-medium">Visiteur</th>
               <th className="text-left py-3 px-6 font-medium">Société</th>
               <th className="text-left py-3 px-6 font-medium">Date</th>
+              <th className="text-left py-3 px-6 font-medium">Arrivée</th>
               <th className="text-left py-3 px-6 font-medium">Hôte</th>
               <th className="text-left py-3 px-6 font-medium">Statut</th>
               <th className="text-left py-3 px-6 font-medium">Actions</th>
@@ -98,10 +124,29 @@ const VisitorsPage: React.FC = () => {
                   </td>
                   <td className="py-3 px-6">{v.company}</td>
                   <td className="py-3 px-6">{v.visitDate}</td>
+                  <td className="py-3 px-6">{v.checkInTime ?? '—'}</td>
                   <td className="py-3 px-6">{host ? host.name : '—'}</td>
                   <td className="py-3 px-6">{statusBadge(v.status)}</td>
-                  <td className="py-3 px-6">
-                    <button onClick={() => openEdit(v)} className="text-yale-blue hover:text-berkeley-blue mr-3">
+                  <td className="py-3 px-6 flex gap-3">
+                    {v.status === 'expected' && (
+                      <button
+                        title="Enregistrer l'arrivée"
+                        onClick={() => handleCheckIn(v)}
+                        className="text-success hover:text-berkeley-blue"
+                      >
+                        <FontAwesomeIcon icon={faSignInAlt} />
+                      </button>
+                    )}
+                    {v.status === 'checked_in' && (
+                      <button
+                        title="Marquer sortie"
+                        onClick={() => handleCheckOut(v)}
+                        className="text-secondary hover:text-berkeley-blue"
+                      >
+                        <FontAwesomeIcon icon={faSignOutAlt} />
+                      </button>
+                    )}
+                    <button onClick={() => openEdit(v)} className="text-yale-blue hover:text-berkeley-blue">
                       <FontAwesomeIcon icon={faEdit} />
                     </button>
                     <button
@@ -118,7 +163,7 @@ const VisitorsPage: React.FC = () => {
             })}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={6} className="py-6 text-center text-gray-500">
+                <td colSpan={7} className="py-6 text-center text-gray-500">
                   Aucun visiteur trouvé
                 </td>
               </tr>

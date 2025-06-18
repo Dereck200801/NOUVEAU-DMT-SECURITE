@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { TicketProvider, useTickets } from '../context/TicketContext';
@@ -12,8 +12,8 @@ const HelpDeskContent: React.FC = () => {
   const { tickets, addTicket, updateTicket, deleteTicket, getPriorities, getStatuses } = useTickets();
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [priorityFilter, setPriorityFilter] = useState<'all' | ReturnType<typeof getPriorities>[number]>('all');
-  const [statusFilter, setStatusFilter] = useState<'all' | ReturnType<typeof getStatuses>[number]>('all');
+  const [priorityFilter, setPriorityFilter] = useState<'all' | Ticket['priority']>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | Ticket['status']>('all');
 
   // Modal states
   const [showAddForm, setShowAddForm] = useState(false);
@@ -25,35 +25,37 @@ const HelpDeskContent: React.FC = () => {
   const priorities = getPriorities();
   const statuses = getStatuses();
 
-  const filteredTickets = tickets.filter((ticket) => {
-    const matchesSearch = ticket.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ticket.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesPriority = priorityFilter === 'all' || ticket.priority === priorityFilter;
-    const matchesStatus = statusFilter === 'all' || ticket.status === statusFilter;
-    return matchesSearch && matchesPriority && matchesStatus;
-  });
+  const filteredTickets = useMemo(() => {
+    return tickets.filter((ticket) => {
+      const matchesSearch = ticket.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ticket.description.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesPriority = priorityFilter === 'all' || ticket.priority === priorityFilter;
+      const matchesStatus = statusFilter === 'all' || ticket.status === statusFilter;
+      return matchesSearch && matchesPriority && matchesStatus;
+    });
+  }, [tickets, searchTerm, priorityFilter, statusFilter]);
 
-  const handleAddSubmit = (data: NewTicket | Partial<Ticket>) => {
+  const handleAddSubmit = useCallback((data: NewTicket | Partial<Ticket>) => {
     addTicket(data as NewTicket);
     setShowAddForm(false);
-  };
+  }, [addTicket]);
 
-  const handleEditSubmit = (data: Partial<Ticket>) => {
+  const handleEditSubmit = useCallback((data: Partial<Ticket>) => {
     if (selectedTicket) {
       updateTicket(selectedTicket.id, data);
       setShowEditForm(false);
       setSelectedTicket(null);
     }
-  };
+  }, [selectedTicket, updateTicket]);
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = useCallback(() => {
     if (selectedTicket) {
       deleteTicket(selectedTicket.id);
       setShowDeleteConfirm(false);
       setShowDetails(false);
       setSelectedTicket(null);
     }
-  };
+  }, [selectedTicket, deleteTicket]);
 
   return (
     <div>
@@ -88,7 +90,8 @@ const HelpDeskContent: React.FC = () => {
             <select
               className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-accent"
               value={priorityFilter}
-              onChange={(e) => setPriorityFilter(e.target.value as any)}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                setPriorityFilter(e.target.value as Ticket['priority'] | 'all')}
             >
               <option value="all">Toutes les priorités</option>
               {priorities.map((p) => (
@@ -103,7 +106,8 @@ const HelpDeskContent: React.FC = () => {
             <select
               className="border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-accent"
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as any)}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                setStatusFilter(e.target.value as Ticket['status'] | 'all')}
             >
               <option value="all">Tous les statuts</option>
               {statuses.map((s) => (

@@ -26,7 +26,9 @@ import {
   faFileInvoiceDollar,
   faLifeRing,
   faExclamationTriangle,
-  faSearch
+  faSearch,
+  faHistory,
+  faChevronRight
 } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../context/AuthContext';
 import { Button } from './ui/button';
@@ -48,6 +50,22 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar, collapsed, set
   
   // Search state for filtering navigation links
   const [searchQuery, setSearchQuery] = React.useState('');
+  
+  // Gestion d'ouverture des sous-menus par groupe
+  type GroupKey = 'missions' | 'personnel' | 'ressources' | 'clients' | 'support' | 'conformite' | 'visitors';
+  const initialExpanded: Record<GroupKey, boolean> = {
+    missions: location.pathname.startsWith('/missions') || location.pathname.startsWith('/planning') || location.pathname.startsWith('/calendar'),
+    personnel: location.pathname.startsWith('/agents') || location.pathname.startsWith('/employees') || location.pathname.startsWith('/leaves') || location.pathname.startsWith('/training'),
+    ressources: location.pathname.startsWith('/equipment') || location.pathname.startsWith('/fleet'),
+    clients: location.pathname.startsWith('/clients') || location.pathname.startsWith('/billing'),
+    support: location.pathname.startsWith('/helpdesk') || location.pathname.startsWith('/risk-management'),
+    conformite: location.pathname.startsWith('/reports') || location.pathname.startsWith('/compliance'),
+    visitors: location.pathname.startsWith('/visitors'),
+  };
+
+  const [expandedGroup, setExpandedGroup] = React.useState<Record<GroupKey, boolean>>(initialExpanded);
+
+  const toggleGroup = (key: GroupKey) => setExpandedGroup((prev) => ({ ...prev, [key]: !prev[key] }));
   
   const handleLogout = () => {
     logout();
@@ -107,33 +125,118 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar, collapsed, set
         
         {/* Navigation */}
         <nav className="flex-1 mt-4 px-2 overflow-y-auto">
-          {/* Menu items with active state handling */}
+          {/* --- Définition des menus hiérarchiques --- */}
           {[
             { path: '/dashboard', icon: faTachometerAlt, label: 'Tableau de bord', perm: Permission.DASHBOARD_VIEW },
-            { path: '/agents', icon: faUserShield, label: 'Agents', badge: '24', perm: Permission.MISSIONS_VIEW },
-            { path: '/missions', icon: faTasks, label: 'Missions', badge: '8', perm: Permission.MISSIONS_VIEW },
-            { path: '/calendar', icon: faCalendarAlt, label: 'Calendrier', perm: Permission.MISSIONS_VIEW },
-            { path: '/clients', icon: faBuilding, label: 'Clients', perm: Permission.CLIENTS_VIEW },
-            { path: '/employees', icon: faUsers, label: 'Employés', perm: Permission.EMPLOYEES_VIEW },
-            { path: '/planning', icon: faCalendarCheck, label: 'Plannings', perm: Permission.MISSIONS_VIEW },
-            { path: '/leaves', icon: faCalendarTimes, label: 'Congés', perm: Permission.EMPLOYEES_VIEW },
-            { path: '/equipment', icon: faBoxOpen, label: 'Équipements', perm: Permission.EQUIPMENT_VIEW },
-            { path: '/fleet', icon: faTruck, label: 'Flotte', perm: Permission.FLEET_VIEW },
-            { path: '/visitors', icon: faDoorOpen, label: 'Visiteurs', perm: Permission.VISITORS_VIEW },
-            { path: '/compliance', icon: faClipboardList, label: 'Conformité', perm: Permission.REPORTS_VIEW },
-            { path: '/training', icon: faGraduationCap, label: 'Formations', perm: Permission.EMPLOYEES_VIEW },
+            // Missions group
+            { group: 'missions', label: 'Missions', icon: faTasks, children: [
+              { path: '/missions', icon: faTasks, label: 'Missions', badge: '8', perm: Permission.MISSIONS_VIEW },
+              { path: '/planning', icon: faCalendarCheck, label: 'Plannings', perm: Permission.MISSIONS_VIEW },
+              { path: '/calendar', icon: faCalendarAlt, label: 'Calendrier', perm: Permission.MISSIONS_VIEW },
+            ] },
+            // Personnel group
+            { group: 'personnel', label: 'Personnel', icon: faUsers, children: [
+              { path: '/agents', icon: faUserShield, label: 'Agents', badge: '24', perm: Permission.MISSIONS_VIEW },
+              { path: '/employees', icon: faUsers, label: 'Employés', perm: Permission.EMPLOYEES_VIEW },
+              { path: '/leaves', icon: faCalendarTimes, label: 'Congés', perm: Permission.EMPLOYEES_VIEW },
+              { path: '/training', icon: faGraduationCap, label: 'Formations', perm: Permission.EMPLOYEES_VIEW },
+            ] },
+            // Ressources group
+            { group: 'ressources', label: 'Ressources', icon: faBoxOpen, children: [
+              { path: '/equipment', icon: faBoxOpen, label: 'Équipements', perm: Permission.EQUIPMENT_VIEW },
+              { path: '/fleet', icon: faTruck, label: 'Flotte', perm: Permission.FLEET_VIEW },
+            ] },
+            // Clients group
+            { group: 'clients', label: 'Clients & Facturation', icon: faBuilding, children: [
+              { path: '/clients', icon: faBuilding, label: 'Clients', perm: Permission.CLIENTS_VIEW },
+              { path: '/billing', icon: faFileInvoiceDollar, label: 'Facturation', perm: Permission.CLIENTS_VIEW },
+            ] },
+            // Visiteurs group (already had children)
+            { group: 'visitors', label: 'Visiteurs', icon: faDoorOpen, children: [
+              { path: '/visitors', icon: faDoorOpen, label: 'Portail', perm: Permission.VISITORS_VIEW },
+              { path: '/visitors/history', icon: faHistory, label: 'Historique visites', perm: Permission.VISITORS_VIEW },
+            ] },
+            // Conformité
+            { group: 'conformite', label: 'Conformité', icon: faClipboardList, children: [
+              { path: '/compliance', icon: faClipboardList, label: 'Conformité', perm: Permission.REPORTS_VIEW },
+              { path: '/reports', icon: faFileAlt, label: 'Rapports', perm: Permission.REPORTS_VIEW },
+            ] },
+            // Support
+            { group: 'support', label: 'Support', icon: faLifeRing, children: [
+              { path: '/helpdesk', icon: faLifeRing, label: 'Help Desk', perm: Permission.TICKETS_VIEW },
+              { path: '/risk-management', icon: faExclamationTriangle, label: 'Risques', perm: Permission.MISSIONS_VIEW },
+            ] },
+            // Analytics remains single
             { path: '/analytics', icon: faChartBar, label: 'BI', perm: Permission.DASHBOARD_VIEW },
-            { path: '/billing', icon: faFileInvoiceDollar, label: 'Facturation', perm: Permission.CLIENTS_VIEW },
-            { path: '/helpdesk', icon: faLifeRing, label: 'Help Desk', perm: Permission.TICKETS_VIEW },
-            { path: '/risk-management', icon: faExclamationTriangle, label: 'Risques', perm: Permission.MISSIONS_VIEW },
-            { path: '/reports', icon: faFileAlt, label: 'Rapports', perm: Permission.REPORTS_VIEW },
-          ].filter((item) =>
-            item.label.toLowerCase().includes(searchQuery.toLowerCase())
-          ).map((item) => {
-            const link = (
+          ].filter((item) => {
+            // filter logic to include children labels as well
+            if ('children' in item) {
+              return item.label.toLowerCase().includes(searchQuery.toLowerCase()) || item.children!.some(c => c.label.toLowerCase().includes(searchQuery.toLowerCase()));
+            }
+            return item.label.toLowerCase().includes(searchQuery.toLowerCase());
+          }).map((item) => {
+            if ('children' in item) {
+              const key = item.group as GroupKey;
+              const parentLink = (
+                <div
+                  key={item.label}
+                  className={cn('sidebar-link cursor-pointer select-none', collapsed && 'justify-center')}
+                  onClick={() => {
+                    if (!collapsed) toggleGroup(key);
+                    else setCollapsed(false);
+                  }}
+                >
+                  <div className="sidebar-icon">
+                    <FontAwesomeIcon icon={item.icon} />
+                  </div>
+                  {!collapsed && <span>{item.label}</span>}
+                  {!collapsed && (
+                    <FontAwesomeIcon
+                      icon={faChevronRight}
+                      className={cn('ml-auto transition-transform', expandedGroup[key] && 'rotate-90')}
+                    />
+                  )}
+                </div>
+              );
+
+              const childrenLinks = !collapsed && expandedGroup[key]
+                ? item.children!.map((child) => {
+                    const childLink = (
+                      <Link
+                        key={child.path}
+                        to={child.path}
+                        className={cn(
+                          'sidebar-link no-underline ml-8 text-sm',
+                          location.pathname === child.path && 'active'
+                        )}
+                        onClick={() => {
+                          if (collapsed) setCollapsed(false);
+                        }}
+                      >
+                        <div className="sidebar-icon">
+                          <FontAwesomeIcon icon={child.icon} />
+                        </div>
+                        <span>{child.label}</span>
+                      </Link>
+                    );
+                    return child.perm ? (
+                      <WithPermission perm={child.perm} key={child.path}>
+                        {childLink}
+                      </WithPermission>
+                    ) : (
+                      childLink
+                    );
+                  })
+                : null;
+
+              return [parentLink, childrenLinks];
+            }
+
+            // simple link (no children)
+            const simpleLink = (
               <Link
                 key={item.path}
-                to={item.path}
+                to={item.path!}
                 className={cn(
                   'sidebar-link no-underline',
                   collapsed && 'justify-center',
@@ -147,19 +250,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar, collapsed, set
                   <FontAwesomeIcon icon={item.icon} />
                 </div>
                 {!collapsed && <span>{item.label}</span>}
-                {!collapsed && item.badge && (
-                  <span className="ml-auto bg-yale-blue/10 text-yale-blue text-xs rounded-full px-2 py-0.5">
-                    {item.badge}
-                  </span>
-                )}
               </Link>
             );
+
             return item.perm ? (
               <WithPermission perm={item.perm} key={item.path}>
-                {link}
+                {simpleLink}
               </WithPermission>
             ) : (
-              link
+              simpleLink
             );
           })}
           
@@ -202,8 +301,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar, collapsed, set
             </Link>
           ))}
           
+          {/** Ancien lien Paramètres dans le nav (désactivé) **/}
+          {/**
           {!collapsed && <div className="sidebar-divider" />}
-          
+
           <Link 
             to="/settings" 
             className={cn(
@@ -220,7 +321,27 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar, collapsed, set
             </div>
             {!collapsed && <span>Paramètres</span>}
           </Link>
+          **/}
         </nav>
+        
+        {/* Paramètres (Settings) link pinned above user profile */}
+        {!collapsed && <div className="sidebar-divider mx-2" />}
+        <Link 
+          to="/settings" 
+          className={cn(
+            "sidebar-link no-underline",
+            collapsed && 'justify-center',
+            location.pathname === '/settings' && "active"
+          )}
+          onClick={() => {
+            if (collapsed) setCollapsed(false);
+          }}
+        >
+          <div className="sidebar-icon">
+            <FontAwesomeIcon icon={faCog} />
+          </div>
+          {!collapsed && <span>Paramètres</span>}
+        </Link>
         
         {/* User profile */}
         {user && (

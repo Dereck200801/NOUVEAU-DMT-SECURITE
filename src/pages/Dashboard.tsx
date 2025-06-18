@@ -9,16 +9,8 @@ import {
   Tooltip,
   Legend
 } from 'chart.js';
-import { Bar, Doughnut } from 'react-chartjs-2';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faUserShield, 
-  faTasks, 
-  faClipboardCheck, 
-  faExclamationTriangle,
-  faSpinner
-} from '@fortawesome/free-solid-svg-icons';
-import DashboardCard from '../components/DashboardCard';
+import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 import NotificationTester from '../components/NotificationTester';
 import TrainingCertifications from '../components/TrainingCertifications';
 import MissionMap from '../components/MissionMap';
@@ -28,7 +20,11 @@ import IncidentReports from '../components/IncidentReports';
 import incidentService from '../services/incidentService';
 import locationService from '../services/locationService';
 import agentService from '../services/agentService';
+import { useAgents } from '../context/AgentContext';
 import { Agent } from '../types/agent';
+import StatsGrid from '../components/dashboard/StatsGrid';
+import RealTimeCharts from '../components/dashboard/RealTimeCharts';
+import AssignAgentModal from '../components/dashboard/AssignAgentModal';
 
 // Register ChartJS components
 ChartJS.register(
@@ -78,6 +74,10 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [assigningAgentId, setAssigningAgentId] = useState<number | null>(null);
+  const [assignModalOpen, setAssignModalOpen] = useState<boolean>(false);
+  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
+
+  const { assignToMission, detachFromMission } = useAgents();
 
   // Chart configuration
   const chartColors = {
@@ -216,40 +216,51 @@ const Dashboard: React.FC = () => {
   };
 
   // Fonction pour affecter un agent à une mission (interaction simple via prompt)
-  const handleAssignAgent = async (agent: Agent) => {
-    // Demander l'ID de mission à l'utilisateur. Dans une vraie application on ouvrirait un
-    // sélecteur ou une modal, mais un prompt suffit pour rendre la fonctionnalité utilisable.
-    const missionIdStr = window.prompt(`Entrez l\'ID de la mission à assigner à ${agent.name}`);
-    const missionId = missionIdStr ? parseInt(missionIdStr, 10) : null;
+  const handleAssignAgent = (agent: Agent) => {
+    setSelectedAgent(agent);
+    setAssignModalOpen(true);
+  };
 
-    if (!missionId) {
-      return; // L\'utilisateur a annulé ou fourni une entrée invalide
-    }
-
+  const confirmAssign = async (missionId: number) => {
+    if (!selectedAgent) return;
     try {
-      setAssigningAgentId(agent.id);
-      // Appel API : agentService.assignToMission mettra à jour côté serveur
-      await agentService.assignToMission(agent.id, missionId);
-
-      // Mettre à jour l\'état local pour refléter le changement sans attendre un rafraîchissement global
-      setAgentsOnDuty((prev) => prev.map((a) =>
-        a.id === agent.id
-          ? {
-              ...a,
-              status: 'on_mission',
-              currentMission: `Mission #${missionId}`,
-              // Valeurs fictives – dans une vraie app on récupérerait les vraies données du backend
-              missionStartTime: new Date().getHours() + 'h',
-              missionEndTime: '--',
-              hoursOnDuty: 0,
-            }
-          : a
-      ));
-    } catch (err) {
-      console.error('Erreur lors de l\'assignation de l\'agent:', err);
-      window.alert('Impossible d\'assigner l\'agent à la mission. Veuillez réessayer plus tard.');
+      setAssigningAgentId(selectedAgent.id);
+      await assignToMission(selectedAgent.id, missionId);
+      // Mise à jour locale pour les agents affichés dans ce composant
+      setAgentsOnDuty((prev) =>
+        prev.map((a) =>
+          a.id === selectedAgent.id
+            ? {
+                ...a,
+                status: 'on_mission',
+                currentMission: `Mission #${missionId}`,
+                missionStartTime: new Date().getHours() + 'h',
+                missionEndTime: '--',
+                hoursOnDuty: 0,
+              }
+            : a
+        )
+      );
+    } catch (err: any) {
+      if (err.message?.includes('déjà en mission')) {
+        const confirmDetach = window.confirm('Cet agent est déjà en mission. Voulez-vous le détacher de sa mission actuelle et le réaffecter ?');
+        if (confirmDetach) {
+          try {
+            await detachFromMission(selectedAgent.id);
+            await assignToMission(selectedAgent.id, missionId);
+          } catch (e) {
+            console.error(e);
+            alert("Impossible de réaffecter l'agent.");
+          }
+        }
+      } else {
+        console.error(err);
+        alert("Impossible d'affecter l'agent. Veuillez réessayer plus tard.");
+      }
     } finally {
+      setAssignModalOpen(false);
       setAssigningAgentId(null);
+      setSelectedAgent(null);
     }
   };
 
@@ -279,63 +290,7 @@ const Dashboard: React.FC = () => {
       )}
       
       {/* Stats cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <DashboardCard 
-          title="Agents actifs"
-          value={stats.activeAgents}
-          icon={faUserShield}
-          iconBgColor="bg-blue-100"
-          iconColor="text-accent"
-          borderColor="accent"
-          change={{
-            value: `${stats.agentsChange}%`,
-            isPositive: stats.agentsChange > 0,
-            text: "depuis le mois dernier"
-          }}
-        />
-        
-        <DashboardCard 
-          title="Missions en cours"
-          value={stats.activeMissions}
-          icon={faTasks}
-          iconBgColor="bg-yellow-100"
-          iconColor="text-warning"
-          borderColor="warning"
-          change={{
-            value: `${Math.abs(stats.missionsActiveChange)}%`,
-            isPositive: stats.missionsActiveChange > 0,
-            text: "depuis le mois dernier"
-          }}
-        />
-        
-        <DashboardCard 
-          title="Missions terminées"
-          value={stats.completedMissions}
-          icon={faClipboardCheck}
-          iconBgColor="bg-green-100"
-          iconColor="text-success"
-          borderColor="success"
-          change={{
-            value: `${stats.missionsCompletedChange}%`,
-            isPositive: stats.missionsCompletedChange > 0,
-            text: "depuis le mois dernier"
-          }}
-        />
-        
-        <DashboardCard 
-          title="Incidents reportés"
-          value={stats.reportedIncidents}
-          icon={faExclamationTriangle}
-          iconBgColor="bg-red-100"
-          iconColor="text-danger"
-          borderColor="danger"
-          change={{
-            value: `${stats.resolvedIncidents}`,
-            isPositive: true,
-            text: "résolus ce mois"
-          }}
-        />
-      </div>
+      <StatsGrid stats={stats} />
       
       {/* Performance Metrics */}
       <div className="mb-8">
@@ -344,19 +299,13 @@ const Dashboard: React.FC = () => {
       
       {/* Main area charts and map */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Occupancy chart */}
-        <div className="bg-white rounded-2xl shadow-lg p-6">
-          <h2 className="text-lg font-semibold mb-4">Taux d'occupation des agents</h2>
-          <div className="chart-container">
-            {occupancyData ? (
-              <Bar data={occupancyData} options={barOptions} />
-            ) : (
-              <div className="flex items-center justify-center h-64">
-                <p className="text-gray-500">Données non disponibles</p>
-              </div>
-            )}
-          </div>
-        </div>
+        {/* Charts with tabs */}
+        <RealTimeCharts
+          occupancyData={occupancyData}
+          missionsByClient={missionsByClient}
+          barOptions={barOptions}
+          doughnutOptions={doughnutOptions}
+        />
         
         {/* Mission Map */}
         <MissionMap />
@@ -373,38 +322,8 @@ const Dashboard: React.FC = () => {
       </div>
       
       {/* Training Certifications and Missions by client */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <div className="mb-8">
         <TrainingCertifications />
-        
-        {/* Missions by client */}
-        <div className="bg-white rounded-2xl shadow-lg p-6">
-          <h2 className="text-lg font-semibold mb-4">Missions par client</h2>
-          <div className="chart-container">
-            {missionsByClient.labels.length > 0 ? (
-              <Doughnut 
-                data={{
-                  labels: missionsByClient.labels,
-                  datasets: [{
-                    data: missionsByClient.data,
-                    backgroundColor: [
-                      chartColors.primary,
-                      '#0ea5e9',
-                      chartColors.success,
-                      '#8b5cf6',
-                      chartColors.secondary
-                    ],
-                    borderWidth: 0,
-                  }]
-                }} 
-                options={doughnutOptions} 
-              />
-            ) : (
-              <div className="flex items-center justify-center h-64">
-                <p className="text-gray-500">Données non disponibles</p>
-              </div>
-            )}
-          </div>
-        </div>
       </div>
       
       {/* Latest missions & agents */}
@@ -495,7 +414,11 @@ const Dashboard: React.FC = () => {
                         <p className="text-xs text-gray-500">{agent.missionStartTime}-{agent.missionEndTime}</p>
                       </>
                     ) : (
-                      <button className="bg-light text-primary rounded-lg px-3 py-1 text-sm hover:bg-gray-200 transition" onClick={() => handleAssignAgent(agent)} disabled={assigningAgentId === agent.id}>
+                      <button
+                        className="bg-light text-primary rounded-lg px-3 py-1 text-sm hover:bg-gray-200 transition" 
+                        onClick={() => handleAssignAgent(agent)}
+                        disabled={assigningAgentId === agent.id}
+                      >
                         {assigningAgentId === agent.id ? '...' : 'Affecter'}
                       </button>
                     )}
@@ -515,6 +438,14 @@ const Dashboard: React.FC = () => {
       <div className="grid grid-cols-1 mb-8">
         <NotificationTester />
       </div>
+
+      {/* Assign agent modal */}
+      <AssignAgentModal
+        agent={selectedAgent}
+        isOpen={assignModalOpen}
+        onClose={() => setAssignModalOpen(false)}
+        onAssign={confirmAssign}
+      />
     </div>
   );
 };

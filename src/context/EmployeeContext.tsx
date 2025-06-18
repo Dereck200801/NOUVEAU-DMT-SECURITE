@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import type { Employee, NewEmployee } from '../types/employee';
 import employeeService from '../services/employeeService';
+import agentService from '../services/agentService';
+import type { Agent } from '../types/agent';
 
 interface EmployeeContextType {
   employees: Employee[];
@@ -17,8 +19,26 @@ export const EmployeeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [employees, setEmployees] = useState<Employee[]>([]);
 
   const refresh = async () => {
-    const list = await employeeService.list();
-    setEmployees(list);
+    const [emps, agents] = await Promise.all([
+      employeeService.list(),
+      agentService.getAll(),
+    ]);
+
+    const agentEmployees = (agents as Agent[]).map<Employee>((a) => ({
+      id: a.id,
+      name: a.name,
+      email: a.email,
+      phone: a.phone,
+      position: a.specialty || 'Agent de sécurité',
+      department: 'Sécurité',
+      status: a.status === 'inactive' ? 'inactive' : 'active',
+      contract: { type: 'cdi', startDate: a.joinDate, status: 'active' },
+      leaveBalance: { annual: 0, remaining: 0 },
+      documents: a.documents,
+    }));
+
+    const combined = [...emps, ...agentEmployees.filter((ag) => !emps.some((e) => e.id === ag.id))];
+    setEmployees(combined);
   };
 
   useEffect(() => {

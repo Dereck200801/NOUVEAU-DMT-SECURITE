@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { useShifts } from '../context/ShiftContext';
@@ -70,16 +70,45 @@ const Planning: React.FC = () => {
     if (sh) openEdit(sh);
   };
 
+  const calendarRef = useRef<any>(null);
+  const [jumpMonth, setJumpMonth] = useState<string>('');
+
+  const handleJumpMonth = () => {
+    if (!jumpMonth) return;
+    const [yearStr, monthStr] = jumpMonth.split('-');
+    const year = Number(yearStr);
+    const month = Number(monthStr);
+    if (!year || !month) return;
+    const targetDate = new Date(year, month - 1, 1);
+    calendarRef.current?.getApi()?.gotoDate(targetDate);
+  };
+
   return (
     <div>
       <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <h1 className="text-2xl font-bold">Gestion des Plannings</h1>
-        <button
-          onClick={openCreate}
-          className="bg-yale-blue hover:bg-berkeley-blue text-white py-2 px-4 rounded-lg flex items-center"
-        >
-          <FontAwesomeIcon icon={faPlus} className="mr-2" /> Nouveau shift
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Sélecteur de mois pour navigation rapide */}
+          <input
+            type="month"
+            value={jumpMonth}
+            onChange={(e) => setJumpMonth(e.target.value)}
+            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-accent"
+          />
+          <button
+            onClick={handleJumpMonth}
+            className="bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-3 rounded-lg text-sm transition-colors duration-200"
+          >
+            Aller
+          </button>
+
+          <button
+            onClick={openCreate}
+            className="bg-yale-blue hover:bg-berkeley-blue text-white py-2 px-4 rounded-lg flex items-center"
+          >
+            <FontAwesomeIcon icon={faPlus} className="mr-2" /> Nouveau shift
+          </button>
+        </div>
       </div>
 
       {/* Search */}
@@ -151,6 +180,7 @@ const Planning: React.FC = () => {
       {/* Calendar */}
       <div className="mt-8 bg-white rounded-2xl shadow-lg p-6">
         <FullCalendar
+          ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
           initialView="dayGridMonth"
           headerToolbar={{

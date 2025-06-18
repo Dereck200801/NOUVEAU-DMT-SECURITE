@@ -7,7 +7,7 @@ export interface Mission {
   location: string;
   startDate: string;
   endDate: string;
-  status: 'pending' | 'active' | 'completed' | 'cancelled';
+  status: 'pending' | 'active' | 'planned' | 'in_progress' | 'completed' | 'cancelled';
   agents?: number[];
   description: string;
   created_at?: string;

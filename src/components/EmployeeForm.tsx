@@ -47,13 +47,22 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ employee, onSubmit, onCance
 
     if (name.startsWith('contract.')) {
       const field = name.split('.')[1] as keyof Employee['contract'];
-      setFormData((prev) => ({
-        ...prev,
-        contract: {
+      setFormData((prev) => {
+        const updatedContract = {
           ...(prev.contract ?? defaultContract),
           [field]: value,
-        },
-      }));
+        } as Employee['contract'];
+
+        // Si on choisit un CDI, on vide la date de fin
+        if (field === 'type' && value === 'cdi') {
+          updatedContract.endDate = '';
+        }
+
+        return {
+          ...prev,
+          contract: updatedContract,
+        };
+      });
     } else if (name.startsWith('leave.')) {
       const field = name.split('.')[1] as keyof Employee['leaveBalance'];
       setFormData((prev) => ({
@@ -234,7 +243,10 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ employee, onSubmit, onCance
                   name="contract.endDate"
                   value={formData.contract?.endDate || ''}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yale-blue"
+                  disabled={formData.contract?.type === 'cdi'}
+                  className={`w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yale-blue ${
+                    formData.contract?.type === 'cdi' ? 'bg-gray-100 cursor-not-allowed' : 'border-gray-300'
+                  }`}
                 />
               </div>
             </div>

@@ -10,6 +10,8 @@ export interface Vehicle {
   mileage: number;       // Current mileage in km
   lastServiceDate: string; // YYYY-MM-DD
   notes?: string;
+  photoUrl?: string;
+  documents?: import('./agent').Document[];
 }
 
 export interface NewVehicle {
@@ -21,6 +23,8 @@ export interface NewVehicle {
   mileage?: number;
   lastServiceDate?: string;
   notes?: string;
+  photoUrl?: string;
+  documents?: import('./agent').Document[];
 }
 
 export interface VehicleFilters {

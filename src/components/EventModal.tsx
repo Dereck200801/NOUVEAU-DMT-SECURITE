@@ -14,6 +14,7 @@ interface EventModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (data: CreateEventDTO) => void;
+  onDelete?: (event: Event) => void;
   event?: Event;
   selectedDate?: string;
 }
@@ -22,6 +23,7 @@ const EventModal: React.FC<EventModalProps> = ({
   isOpen, 
   onClose, 
   onSave, 
+  onDelete,
   event, 
   selectedDate 
 }) => {
@@ -218,6 +220,15 @@ const EventModal: React.FC<EventModalProps> = ({
           </div>
 
           <div className="flex justify-end space-x-3">
+            {event && onDelete && (
+              <button
+                type="button"
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                onClick={() => onDelete(event)}
+              >
+                Supprimer
+              </button>
+            )}
             <button
               type="button"
               className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"

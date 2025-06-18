@@ -8,7 +8,10 @@
       "type": "reunion",
       "description": "Réunion hebdomadaire de l'équipe",
       "location": "Salle de conférence A",
-      "participants": ["John Doe", "Jane Smith"]
+      "participants": [
+        "John Doe",
+        "Jane Smith"
+      ]
     },
     {
       "id": 2,
@@ -18,7 +21,10 @@
       "type": "formation",
       "description": "Formation sur les nouvelles procédures de sécurité",
       "location": "Salle de formation B",
-      "participants": ["John Doe", "Alice Johnson"]
+      "participants": [
+        "John Doe",
+        "Alice Johnson"
+      ]
     },
     {
       "id": 8,
@@ -28,17 +34,23 @@
       "type": "formation",
       "description": "Formation avancée sur les nouvelles technologies",
       "location": "Salle de formation A",
-      "participants": ["Équipe technique"]
+      "participants": [
+        "Équipe technique"
+      ]
     },
     {
-      "id": 9,
       "title": "Mission client important",
-      "date": "2025-06-10",
-      "time": "10:30",
+      "date": "2025-06-17",
+      "time": "09:00",
       "type": "mission",
       "description": "Intervention chez un client important",
       "location": "Client VIP, Paris",
-      "participants": ["Équipe senior"]
+      "participants": [],
+      "client": "Carrefour Mont-Bouët",
+      "endDate": "2025-06-17",
+      "status": "completed",
+      "agents": [],
+      "id": 9
     },
     {
       "id": 10,
@@ -48,7 +60,10 @@
       "type": "reunion",
       "description": "Réunion stratégique semestrielle",
       "location": "Salle du conseil",
-      "participants": ["Direction", "Managers"]
+      "participants": [
+        "Direction",
+        "Managers"
+      ]
     },
     {
       "id": 11,
@@ -58,17 +73,9 @@
       "type": "autre",
       "description": "Conférence annuelle sur la cybersécurité",
       "location": "Centre de conférences",
-      "participants": ["Toute l'entreprise"]
-    },
-    {
-      "id": 12,
-      "title": "Audit interne",
-      "date": "2025-06-01",
-      "time": "08:30",
-      "type": "mission",
-      "description": "Audit interne des systèmes",
-      "location": "Siège social",
-      "participants": ["Équipe audit"]
+      "participants": [
+        "Toute l'entreprise"
+      ]
     },
     {
       "id": 13,
@@ -78,7 +85,10 @@
       "type": "reunion",
       "description": "Présentation des nouveaux services",
       "location": "Salle de réunion B",
-      "participants": ["Équipe commerciale", "Direction"]
+      "participants": [
+        "Équipe commerciale",
+        "Direction"
+      ]
     },
     {
       "id": 14,
@@ -88,17 +98,9 @@
       "type": "formation",
       "description": "Mise à jour sur les règles RGPD",
       "location": "Salle de formation C",
-      "participants": ["Tous les employés"]
-    },
-    {
-      "id": 15,
-      "title": "Mission d'urgence",
-      "date": "2025-06-12",
-      "time": "07:00",
-      "type": "mission",
-      "description": "Intervention d'urgence chez un client",
-      "location": "Client ABC, Lyon",
-      "participants": ["Équipe intervention"]
+      "participants": [
+        "Tous les employés"
+      ]
     },
     {
       "id": 16,
@@ -108,7 +110,10 @@
       "type": "formation",
       "description": "Webinaire sur les dernières menaces",
       "location": "En ligne",
-      "participants": ["Clients", "Partenaires"]
+      "participants": [
+        "Clients",
+        "Partenaires"
+      ]
     },
     {
       "id": 17,
@@ -118,17 +123,24 @@
       "type": "reunion",
       "description": "Planification budgétaire Q3",
       "location": "Salle du conseil",
-      "participants": ["Direction", "Finances"]
+      "participants": [
+        "Direction",
+        "Finances"
+      ]
     },
     {
-      "id": 18,
       "title": "Mission maintenance",
-      "date": "2025-06-28",
+      "date": "2025-06-18",
       "time": "09:00",
       "type": "mission",
       "description": "Maintenance préventive systèmes",
       "location": "Datacenter",
-      "participants": ["Équipe technique"]
+      "participants": [],
+      "client": "Ministère de l'Intérieur",
+      "endDate": "2025-06-18",
+      "status": "completed",
+      "agents": [],
+      "id": 18
     },
     {
       "id": 19,
@@ -138,8 +150,93 @@
       "type": "autre",
       "description": "Activité team building mensuelle",
       "location": "Parc aventure",
-      "participants": ["Toute l'entreprise"]
+      "participants": [
+        "Toute l'entreprise"
+      ]
+    },
+    {
+      "title": "vfvfvf",
+      "date": "2025-07-01",
+      "time": "09:00",
+      "type": "reunion",
+      "description": "fvfvfv",
+      "location": "fvfvfvfvff",
+      "participants": [
+        "vfvfvfvfv"
+      ],
+      "id": 20
+    },
+    {
+      "title": "ccdecd",
+      "date": "2025-06-18",
+      "time": "09:00",
+      "type": "reunion",
+      "description": "cdcdcd",
+      "location": "dcdc",
+      "participants": [
+        "cdcd"
+      ],
+      "id": 21
+    },
+    {
+      "title": "dededede",
+      "date": "2025-06-21",
+      "time": "09:00",
+      "type": "mission",
+      "description": "cdecdcr",
+      "location": "dededed",
+      "participants": [
+        "2",
+        "3"
+      ],
+      "client": "Ministère de l'Intérieur",
+      "endDate": "2025-06-26",
+      "status": "active",
+      "agents": [
+        2,
+        3
+      ],
+      "id": 22
+    },
+    {
+      "title": "cdcdcdc",
+      "date": "2025-06-18",
+      "time": "09:00",
+      "type": "mission",
+      "description": "dcdzccdc",
+      "location": "cdcdc",
+      "participants": [
+        "1",
+        "4"
+      ],
+      "client": "Résidence Haut de Gue-Gue",
+      "endDate": "2025-06-21",
+      "status": "active",
+      "agents": [
+        1,
+        4
+      ],
+      "id": 23
     }
   ],
-  "employees": []
-} 
+  "employees": [
+    {
+      "name": "vfvrfrfr",
+      "email": "frfrfr@rfrf.rfr",
+      "phone": "rfefrefe",
+      "position": "rfefef",
+      "status": "active",
+      "contract": {
+        "type": "cdi",
+        "startDate": "",
+        "status": "pending"
+      },
+      "leaveBalance": {
+        "annual": 25,
+        "remaining": 25
+      },
+      "documents": [],
+      "id": 1
+    }
+  ]
+}

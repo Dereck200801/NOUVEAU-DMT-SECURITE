@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { ClientProvider } from './context/ClientContext';
+import { AgentProvider } from './context/AgentContext';
 import { EmployeeProvider } from './context/EmployeeContext';
 import { ShiftProvider } from './context/ShiftContext';
 import { ReportProvider } from './context/ReportContext';
@@ -40,6 +41,7 @@ import Leaves from './pages/Leaves';
 import Equipment from './pages/Equipment';
 import Fleet from './pages/Fleet';
 import Visitors from './pages/Visitors';
+import VisitorHistory from './pages/VisitorHistory';
 import Compliance from './pages/Compliance';
 import Training from './pages/Training';
 import Analytics from './pages/Analytics';
@@ -105,6 +107,7 @@ import {
   faChartBar,
   faFileInvoiceDollar,
   faLifeRing,
+  faHistory,
 } from '@fortawesome/free-solid-svg-icons';
 
 // Add icons to library
@@ -162,6 +165,7 @@ library.add(
   faChartBar,
   faFileInvoiceDollar,
   faLifeRing,
+  faHistory,
 );
 
 function App() {
@@ -169,129 +173,134 @@ function App() {
     <AuthProvider>
       <NotificationProvider>
         <ClientProvider>
-          <EmployeeProvider>
-            <TrainingProvider>
-              <LeaveProvider>
-                <ShiftProvider>
-                  <EquipmentProvider>
-                    <VehicleProvider>
-                      <VisitorProvider>
-                        <ComplianceProvider>
-                          <ReportProvider>
-                            <Router>
-                              <Routes>
-                                {/* Auth Route */}
-                                <Route path="/login" element={<Login />} />
-                                
-                                {/* Root route redirects to login */}
-                                <Route path="/" element={<Navigate to="/login" replace />} />
-                                
-                                {/* Protected Routes with Layout */}
-                                <Route element={<Layout title="Tableau de Bord" />}>
-                                  <Route
-                                    path="/dashboard"
-                                    element={
-                                      <ProtectedRoute perm={Permission.DASHBOARD_VIEW}>
-                                        <Dashboard />
-                                      </ProtectedRoute>
-                                    }
-                                  />
-                                  <Route
-                                    path="/agents"
-                                    element={<ProtectedRoute perm={Permission.EMPLOYEES_VIEW}><Agents /></ProtectedRoute>} />
-                                  <Route
-                                    path="/missions"
-                                    element={
-                                      <ProtectedRoute perm={Permission.MISSIONS_VIEW}>
-                                        <Missions />
-                                      </ProtectedRoute>
-                                    }
-                                  />
-                                  <Route
-                                    path="/calendar"
-                                    element={<ProtectedRoute perm={Permission.MISSIONS_VIEW}><Calendar/></ProtectedRoute>} />
-                                  <Route
-                                    path="/clients"
-                                    element={<ProtectedRoute perm={Permission.CLIENTS_VIEW}><Clients/></ProtectedRoute>} />
-                                  <Route path="/reports" element={<Reports />} />
-                                  <Route path="/settings" element={<Settings />} />
-                                  <Route
-                                    path="/employees"
-                                    element={<ProtectedRoute perm={Permission.EMPLOYEES_VIEW}><Employees/></ProtectedRoute>} />
+          <AgentProvider>
+            <EmployeeProvider>
+              <TrainingProvider>
+                <LeaveProvider>
+                  <ShiftProvider>
+                    <EquipmentProvider>
+                      <VehicleProvider>
+                        <VisitorProvider>
+                          <ComplianceProvider>
+                            <ReportProvider>
+                              <Router>
+                                <Routes>
+                                  {/* Auth Route */}
+                                  <Route path="/login" element={<Login />} />
                                   
-                                  {/* Premium Module Routes */}
-                                  <Route path="/premium/facial-recognition" element={<FacialRecognition />} />
-                                  <Route path="/premium/accreditations" element={<Accreditations />} />
-                                  <Route path="/premium/crisis-simulator" element={<CrisisSimulator />} />
+                                  {/* Root route redirects to login */}
+                                  <Route path="/" element={<Navigate to="/login" replace />} />
+                                  
+                                  {/* Protected Routes with Layout */}
+                                  <Route element={<Layout title="Tableau de Bord" />}>
+                                    <Route
+                                      path="/dashboard"
+                                      element={
+                                        <ProtectedRoute perm={Permission.DASHBOARD_VIEW}>
+                                          <Dashboard />
+                                        </ProtectedRoute>
+                                      }
+                                    />
+                                    <Route
+                                      path="/agents"
+                                      element={<ProtectedRoute perm={Permission.EMPLOYEES_VIEW}><Agents /></ProtectedRoute>} />
+                                    <Route
+                                      path="/missions"
+                                      element={
+                                        <ProtectedRoute perm={Permission.MISSIONS_VIEW}>
+                                          <Missions />
+                                        </ProtectedRoute>
+                                      }
+                                    />
+                                    <Route
+                                      path="/calendar"
+                                      element={<ProtectedRoute perm={Permission.MISSIONS_VIEW}><Calendar/></ProtectedRoute>} />
+                                    <Route
+                                      path="/clients"
+                                      element={<ProtectedRoute perm={Permission.CLIENTS_VIEW}><Clients/></ProtectedRoute>} />
+                                    <Route path="/reports" element={<Reports />} />
+                                    <Route path="/settings" element={<Settings />} />
+                                    <Route
+                                      path="/employees"
+                                      element={<ProtectedRoute perm={Permission.EMPLOYEES_VIEW}><Employees/></ProtectedRoute>} />
+                                    
+                                    {/* Premium Module Routes */}
+                                    <Route path="/premium/facial-recognition" element={<FacialRecognition />} />
+                                    <Route path="/premium/accreditations" element={<Accreditations />} />
+                                    <Route path="/premium/crisis-simulator" element={<CrisisSimulator />} />
 
-                                  {/* New placeholder pages */}
-                                  <Route
-                                    path="/planning"
-                                    element={<ProtectedRoute perm={Permission.MISSIONS_VIEW}><Planning/></ProtectedRoute>} />
-                                  <Route
-                                    path="/leaves"
-                                    element={<ProtectedRoute perm={Permission.EMPLOYEES_VIEW}><Leaves/></ProtectedRoute>} />
-                                  <Route
-                                    path="/equipment"
-                                    element={<ProtectedRoute perm={Permission.EQUIPMENT_VIEW}><Equipment/></ProtectedRoute>} />
-                                  <Route
-                                    path="/fleet"
-                                    element={<ProtectedRoute perm={Permission.FLEET_VIEW}><Fleet/></ProtectedRoute>} />
-                                  <Route
-                                    path="/visitors"
-                                    element={<ProtectedRoute perm={Permission.VISITORS_VIEW}><Visitors/></ProtectedRoute>} />
-                                  <Route
-                                    path="/compliance"
-                                    element={<ProtectedRoute perm={Permission.REPORTS_VIEW}><Compliance/></ProtectedRoute>} />
-                                  <Route
-                                    path="/training"
-                                    element={<ProtectedRoute perm={Permission.EMPLOYEES_VIEW}><Training/></ProtectedRoute>} />
-                                  <Route
-                                    path="/analytics"
-                                    element={<ProtectedRoute perm={Permission.DASHBOARD_VIEW}><Analytics/></ProtectedRoute>} />
-                                  <Route
-                                    path="/billing"
-                                    element={<ProtectedRoute perm={Permission.CLIENTS_VIEW}><Billing/></ProtectedRoute>} />
-                                  <Route
-                                    path="/helpdesk"
-                                    element={
-                                      <ProtectedRoute perm={Permission.TICKETS_VIEW}>
-                                        <HelpDesk />
-                                      </ProtectedRoute>
-                                    }
-                                  />
-                                  <Route
-                                    path="/risk-management"
-                                    element={<ProtectedRoute perm={Permission.MISSIONS_VIEW}><RiskManagement/></ProtectedRoute>} />
-                                </Route>
-                                
-                                {/* Access denied */}
-                                <Route path="/403" element={<Forbidden />} />
+                                    {/* New placeholder pages */}
+                                    <Route
+                                      path="/planning"
+                                      element={<ProtectedRoute perm={Permission.MISSIONS_VIEW}><Planning/></ProtectedRoute>} />
+                                    <Route
+                                      path="/leaves"
+                                      element={<ProtectedRoute perm={Permission.EMPLOYEES_VIEW}><Leaves/></ProtectedRoute>} />
+                                    <Route
+                                      path="/equipment"
+                                      element={<ProtectedRoute perm={Permission.EQUIPMENT_VIEW}><Equipment/></ProtectedRoute>} />
+                                    <Route
+                                      path="/fleet"
+                                      element={<ProtectedRoute perm={Permission.FLEET_VIEW}><Fleet/></ProtectedRoute>} />
+                                    <Route
+                                      path="/visitors"
+                                      element={<ProtectedRoute perm={Permission.VISITORS_VIEW}><Visitors/></ProtectedRoute>} />
+                                    <Route
+                                      path="/visitors/history"
+                                      element={<ProtectedRoute perm={Permission.VISITORS_VIEW}><VisitorHistory/></ProtectedRoute>} />
+                                    <Route
+                                      path="/compliance"
+                                      element={<ProtectedRoute perm={Permission.REPORTS_VIEW}><Compliance/></ProtectedRoute>} />
+                                    <Route
+                                      path="/training"
+                                      element={<ProtectedRoute perm={Permission.EMPLOYEES_VIEW}><Training/></ProtectedRoute>} />
+                                    <Route
+                                      path="/analytics"
+                                      element={<ProtectedRoute perm={Permission.DASHBOARD_VIEW}><Analytics/></ProtectedRoute>} />
+                                    <Route
+                                      path="/billing"
+                                      element={<ProtectedRoute perm={Permission.CLIENTS_VIEW}><Billing/></ProtectedRoute>} />
+                                    <Route
+                                      path="/helpdesk"
+                                      element={
+                                        <ProtectedRoute perm={Permission.TICKETS_VIEW}>
+                                          <HelpDesk />
+                                        </ProtectedRoute>
+                                      }
+                                    />
+                                    <Route
+                                      path="/risk-management"
+                                      element={<ProtectedRoute perm={Permission.MISSIONS_VIEW}><RiskManagement/></ProtectedRoute>} />
+                                  </Route>
+                                  
+                                  {/* Access denied */}
+                                  <Route path="/403" element={<Forbidden />} />
 
-                                {/* Catch-all route */}
-                                <Route path="*" element={<Navigate to="/login" replace />} />
-                              </Routes>
-                            </Router>
-                            <ToastContainer
-                              position="top-right"
-                              autoClose={3000}
-                              hideProgressBar={false}
-                              newestOnTop
-                              closeOnClick
-                              rtl={false}
-                              pauseOnFocusLoss
-                              draggable
-                              pauseOnHover
-                            />
-                          </ReportProvider>
-                        </ComplianceProvider>
-                      </VisitorProvider>
-                    </VehicleProvider>
-                  </EquipmentProvider>
-                </ShiftProvider>
-              </LeaveProvider>
-            </TrainingProvider>
-          </EmployeeProvider>
+                                  {/* Catch-all route */}
+                                  <Route path="*" element={<Navigate to="/login" replace />} />
+                                </Routes>
+                              </Router>
+                              <ToastContainer
+                                position="top-right"
+                                autoClose={3000}
+                                hideProgressBar={false}
+                                newestOnTop
+                                closeOnClick
+                                rtl={false}
+                                pauseOnFocusLoss
+                                draggable
+                                pauseOnHover
+                              />
+                            </ReportProvider>
+                          </ComplianceProvider>
+                        </VisitorProvider>
+                      </VehicleProvider>
+                    </EquipmentProvider>
+                  </ShiftProvider>
+                </LeaveProvider>
+              </TrainingProvider>
+            </EmployeeProvider>
+          </AgentProvider>
         </ClientProvider>
       </NotificationProvider>
     </AuthProvider>

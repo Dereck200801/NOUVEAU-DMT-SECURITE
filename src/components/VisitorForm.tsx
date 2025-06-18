@@ -19,6 +19,8 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ visitor, isEdit, onSubmit, on
     hostId: visitor?.hostId,
     purpose: visitor?.purpose ?? '',
     badgeNumber: visitor?.badgeNumber ?? '',
+    checkInTime: visitor?.checkInTime ?? new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    checkOutTime: visitor?.checkOutTime ?? '',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -106,6 +108,31 @@ const VisitorForm: React.FC<VisitorFormProps> = ({ visitor, isEdit, onSubmit, on
                 className="border border-gray-300 rounded-lg px-3 py-2 w-full"
               />
             </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Heure d'arrivée</label>
+              <input
+                type="time"
+                name="checkInTime"
+                value={data.checkInTime as string}
+                onChange={handleChange}
+                className="border border-gray-300 rounded-lg px-3 py-2 w-full"
+                required
+              />
+            </div>
+            {isEdit && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Heure de départ</label>
+                <input
+                  type="time"
+                  name="checkOutTime"
+                  value={(data as any).checkOutTime as string}
+                  onChange={handleChange}
+                  className="border border-gray-300 rounded-lg px-3 py-2 w-full"
+                />
+              </div>
+            )}
           </div>
           <div className="flex justify-end gap-3 pt-2">
             <button
