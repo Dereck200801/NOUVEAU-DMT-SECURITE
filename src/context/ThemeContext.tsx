@@ -8,7 +8,7 @@ interface ThemeContextProps {
 }
 
 export const ThemeContext = createContext<ThemeContextProps>({
-  theme: 'system',
+  theme: 'light',
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   setTheme: () => {},
 });
@@ -18,11 +18,11 @@ export const ThemeContext = createContext<ThemeContextProps>({
  * toggling the `dark` class on the <html> element so Tailwind CSS dark-variant styles apply.
  */
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setThemeState] = useState<Theme>('system');
+  const [theme, setThemeState] = useState<Theme>('light');
 
   // Reads initial theme from localStorage (stored under the same key used in Settings)
   useEffect(() => {
-    const stored = (localStorage.getItem('theme') as Theme) || 'system';
+    const stored = (localStorage.getItem('theme') as Theme) || 'light';
     setThemeState(stored);
   }, []);
 
