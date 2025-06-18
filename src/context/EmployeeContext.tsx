@@ -3,6 +3,7 @@ import type { Employee, NewEmployee } from '../types/employee';
 import employeeService from '../services/employeeService';
 import agentService from '../services/agentService';
 import type { Agent } from '../types/agent';
+import { useAgents } from './AgentContext';
 
 interface EmployeeContextType {
   employees: Employee[];
@@ -46,8 +47,17 @@ export const EmployeeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, []);
 
   const add = async (data: NewEmployee) => {
-    const emp = await employeeService.create(data);
-    if (emp) setEmployees((prev) => [...prev, emp]);
+    let emp = await employeeService.create(data);
+    if (!emp) {
+      // Fallback local: assign new id and push directly
+      emp = {
+        ...data,
+        id: Math.max(0, ...employees.map((e) => e.id)) + 1,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      } as Employee;
+    }
+    setEmployees((prev) => [...prev, emp]);
   };
 
   const update = async (id: number, data: Partial<Employee>) => {
@@ -56,8 +66,21 @@ export const EmployeeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const remove = async (id: number) => {
-    const ok = await employeeService.remove(id);
-    if (ok) setEmployees((prev) => prev.filter((e) => e.id !== id));
+    // Essayer de supprimer côté employés
+    let ok = await employeeService.remove(id);
+
+    // Si l'API employés renvoie false, tenter côté agents
+    if (!ok) {
+      try {
+        await agentService.delete(id);
+        ok = true;
+      } catch (err) {
+        console.warn('Suppression via agentService échouée, suppression locale', err);
+      }
+    }
+
+    // Quoi qu'il arrive, on retire l'employé du store local
+    setEmployees((prev) => prev.filter((e) => e.id !== id));
   };
 
   const getById = (id: number) => employees.find((e) => e.id === id);

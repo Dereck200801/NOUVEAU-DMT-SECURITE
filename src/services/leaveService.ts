@@ -23,7 +23,6 @@ const leaveService = {
     await delay(300);
     const leave: Leave = {
       id: LEAVES.length ? Math.max(...LEAVES.map((l) => l.id)) + 1 : 1,
-      status: 'pending',
       ...data,
       status: data.status ?? 'pending',
     };

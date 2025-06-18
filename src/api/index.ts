@@ -1,5 +1,5 @@
 // Configuration de base pour les appels API
-const API_BASE_URL = 'http://localhost:3002/api';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 // Types
 interface ApiResponse<T> {

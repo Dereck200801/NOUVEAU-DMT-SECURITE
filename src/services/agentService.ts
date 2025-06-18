@@ -1,10 +1,9 @@
 import axios from 'axios';
 import { Agent } from '../types/agent';
+import { API_BASE_URL } from '../api';
 
 // Utiliser un chemin relatif au lieu d'une URL en dur
-const API_URL = process.env.NODE_ENV === 'production' 
-  ? '/api' 
-  : '/api'; // Même en développement, on utilise un chemin relatif
+const API_URL = API_BASE_URL;
 
 // Interface pour les statistiques des agents
 export interface AgentStats {

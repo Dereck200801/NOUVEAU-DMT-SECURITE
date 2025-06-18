@@ -1,8 +1,9 @@
 import axios from 'axios';
 import { Certification, Training, CertificationFilters, TrainingFilters, CertificationStats } from '../types/training';
+import { API_BASE_URL } from '../api';
 
 // Remplacer process.env par import.meta.env pour Vite
-const API_URL = 'http://localhost:3001/api';
+const API_URL = API_BASE_URL;
 
 export const trainingService = {
   getAllCertifications: async (filters?: CertificationFilters): Promise<Certification[]> => {

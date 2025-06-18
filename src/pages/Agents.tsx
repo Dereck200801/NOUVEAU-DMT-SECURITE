@@ -4,11 +4,9 @@ import {
   faSearch, 
   faPlus, 
   faEllipsisV, 
-  faEdit, 
   faTrash, 
   faEye,
   faTimes,
-  faSpinner
 } from '@fortawesome/free-solid-svg-icons';
 import AgentProfile from '../components/AgentProfile';
 import { Agent } from '../types/agent';
@@ -17,6 +15,8 @@ import ProfessionalCard from '../components/ProfessionalCard';
 import html2canvas from 'html2canvas';
 import agentService from '../services/agentService';
 import { useAgents as useAgentsContext } from '../context/AgentContext';
+import { useEmployees as useEmployeesContext } from '../context/EmployeeContext';
+import Loader from "../components/ui/loader";
 
 // Sample data for agents
 const INITIAL_AGENTS_DATA: Agent[] = [
@@ -95,7 +95,8 @@ const INITIAL_AGENTS_DATA: Agent[] = [
 ];
 
 const Agents: React.FC = () => {
-  const { agents: contextAgents, updateAgent: updateAgentContext, refresh: refreshAgents } = useAgentsContext();
+  const { agents: contextAgents, updateAgent: updateAgentContext, refresh: refreshAgents, removeAgent } = useAgentsContext();
+  const { refresh: refreshEmployees, remove: removeEmployee } = useEmployeesContext();
 
   const [agents, setAgents] = useState<Agent[]>(contextAgents);
   const [loading, setLoading] = useState<boolean>(contextAgents.length === 0);
@@ -290,11 +291,12 @@ const Agents: React.FC = () => {
   const confirmDelete = async () => {
     if (deleteConfirmation !== null) {
       try {
-        await agentService.delete(deleteConfirmation);
+        await removeAgent(deleteConfirmation);
+        await removeEmployee(deleteConfirmation);
+        await refreshEmployees();
       } catch (error) {
         console.error("Erreur lors de la suppression de l'agent:", error);
       } finally {
-        setAgents(agents.filter(agent => agent.id !== deleteConfirmation));
         setDeleteConfirmation(null);
       }
     }
@@ -313,7 +315,8 @@ const Agents: React.FC = () => {
       // Add new agent via API (hors contexte pour l'instant)
       try {
         const createdAgent = await agentService.create(formData);
-        await refreshAgents(); // Rafraîchir après création
+        await refreshAgents(); // Rafraîchir Agents
+        await refreshEmployees(); // Synchroniser Employés
 
         // Open professional card modal for the newly created agent
         setCardAgent(createdAgent);
@@ -326,6 +329,7 @@ const Agents: React.FC = () => {
           id: Math.max(...agents.map(a => a.id), 0) + 1
         };
         setAgents([...agents, newAgent]);
+        await refreshEmployees(); // Sync
         setCardAgent(newAgent);
         setShowCardModal(true);
       }
@@ -369,11 +373,7 @@ const Agents: React.FC = () => {
 
   // Loading state
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <FontAwesomeIcon icon={faSpinner} className="animate-spin text-accent text-4xl" />
-      </div>
-    );
+    return <Loader fullScreen label="Chargement des agents..." />;
   }
 
   return (
@@ -501,16 +501,6 @@ const Agents: React.FC = () => {
                             role="menuitem"
                           >
                             <FontAwesomeIcon icon={faEye} className="mr-2" /> Voir le profil
-                          </button>
-                          <button 
-                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-900"
-                            onClick={() => {
-                              handleEditAgent(agent);
-                              setOpenMenuId(null);
-                            }}
-                            role="menuitem"
-                          >
-                            <FontAwesomeIcon icon={faEdit} className="mr-2" /> Modifier
                           </button>
                           <button 
                             className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-red-700"

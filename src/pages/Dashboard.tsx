@@ -9,8 +9,7 @@ import {
   Tooltip,
   Legend
 } from 'chart.js';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSpinner } from '@fortawesome/free-solid-svg-icons';
+import Loader from "../components/ui/loader";
 import NotificationTester from '../components/NotificationTester';
 import TrainingCertifications from '../components/TrainingCertifications';
 import MissionMap from '../components/MissionMap';
@@ -265,14 +264,7 @@ const Dashboard: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <FontAwesomeIcon icon={faSpinner} className="animate-spin text-accent text-4xl mb-4" />
-          <p className="text-lg text-gray-600">Chargement du tableau de bord...</p>
-        </div>
-      </div>
-    );
+    return <Loader fullScreen label="Chargement du tableau de bord..." />;
   }
   
   return (

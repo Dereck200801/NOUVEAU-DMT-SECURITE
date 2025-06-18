@@ -3,5 +3,9 @@
   "/api/events/:id": "/events/:id",
   "/api/events/month/:year/:month": "/events?date_like=^:year-:month",
   "/api/employees": "/employees",
-  "/api/employees/:id": "/employees/:id"
+  "/api/employees/:id": "/employees/:id",
+  "/api/agents": "/agents",
+  "/api/agents/:id": "/agents/:id",
+  "/api/trainings": "/trainings",
+  "/api/trainings/:id": "/trainings/:id"
 } 

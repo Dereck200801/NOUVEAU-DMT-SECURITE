@@ -32,7 +32,6 @@ const equipmentService = {
     await delay(200);
     const eq: Equipment = {
       id: EQUIPMENTS.length ? Math.max(...EQUIPMENTS.map((e) => e.id)) + 1 : 1,
-      status: 'available',
       ...data,
       status: data.status ?? 'available',
     };

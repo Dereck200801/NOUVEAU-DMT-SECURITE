@@ -238,5 +238,13 @@
       "documents": [],
       "id": 1
     }
+  ],
+  "agents": [
+    {"id":1,"name":"Pierre Mbemba","email":"pierre@dmt.com","phone":"+241 77 98 45 21","status":"active","specialty":"Surveillance","joinDate":"2023-03-15"},
+    {"id":2,"name":"Didier Ondo","email":"didier@dmt.com","phone":"+241 66 12 34 56","status":"inactive","specialty":"Protection Rapprochée","joinDate":"2021-06-21"}
+  ],
+  "trainings": [
+    {"id":1,"name":"Formation anti-terrorisme","agentId":1,"agentName":"Pierre Mbemba","startDate":"2023-10-10","endDate":"2023-10-15","status":"completed","provider":"Centre National"},
+    {"id":2,"name":"Gestion de foule","agentId":2,"agentName":"Didier Ondo","startDate":"2023-11-20","endDate":"2023-11-25","status":"in_progress","provider":"Institut Sécurité"}
   ]
 }

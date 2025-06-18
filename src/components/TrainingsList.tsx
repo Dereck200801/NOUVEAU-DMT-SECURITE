@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch, faPlus, faSpinner, faUser, faCalendarAlt, faGraduationCap, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faPlus, faUser, faCalendarAlt, faGraduationCap, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 import trainingService from '../services/trainingService';
 import type { Training, TrainingFilters } from '../types/training';
+import Loader from './ui/loader';
 
 const TrainingsList: React.FC = () => {
   const [trainings, setTrainings] = useState<Training[]>([]);
@@ -101,8 +102,7 @@ const TrainingsList: React.FC = () => {
       {/* Table */}
       {loading ? (
         <div className="p-8 text-center">
-          <FontAwesomeIcon icon={faSpinner} className="animate-spin text-yale-blue text-2xl" />
-          <p className="mt-2 text-gray-500">Chargement des formations...</p>
+          <Loader label="Chargement des formations..." />
         </div>
       ) : error ? (
         <div className="p-8 text-center">

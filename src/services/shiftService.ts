@@ -33,7 +33,6 @@ const shiftService = {
     await delay(300);
     const newShift: Shift = {
       id: SHIFTS.length ? Math.max(...SHIFTS.map((s) => s.id)) + 1 : 1,
-      status: 'planned',
       ...data,
       status: data.status ?? 'planned',
     };

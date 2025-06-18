@@ -8,7 +8,7 @@ import DocumentList from './DocumentList';
 
 interface EmployeeFormProps {
   employee?: Employee;
-  onSubmit: (data: NewEmployee | Partial<Employee>) => void;
+  onSubmit: (payload: { employeeType: 'agent' | 'employee'; data: NewEmployee | Partial<Employee> }) => void;
   onCancel: () => void;
   isEdit?: boolean;
 }
@@ -37,6 +37,9 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ employee, onSubmit, onCance
   const [newDoc, setNewDoc] = useState<{name:string; type:string; date:string; file: File|null}>({name:'', type:'ID', date:'', file:null});
   const [editingId, setEditingId] = useState<number|null>(null);
   const [docErrors, setDocErrors] = useState<Record<string,string>>({});
+
+  // Type d'employé fixé désormais à "employee" (les agents se créent dans la page Agents)
+  const employeeType: 'employee' = 'employee';
 
   useEffect(() => {
     if (employee) setFormData({ ...employee });
@@ -127,8 +130,11 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({ employee, onSubmit, onCance
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit({
-      ...(isEdit? formData : (formData as NewEmployee)),
-      documents,
+      employeeType,
+      data: {
+        ...(isEdit ? formData : (formData as NewEmployee)),
+        documents,
+      },
     });
   };
 

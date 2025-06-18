@@ -5,12 +5,12 @@ import {
   faCalendarAlt, 
   faUser, 
   faCheckCircle, 
-  faSpinner,
   faSearch,
   faSort
 } from '@fortawesome/free-solid-svg-icons';
 import certificationService from '../services/certificationService';
 import { Certification, CertificationFilters } from '../types/certification';
+import Loader from './ui/loader';
 
 const TrainingCertifications: React.FC = () => {
   const [certifications, setCertifications] = useState<Certification[]>([]);
@@ -92,8 +92,7 @@ const TrainingCertifications: React.FC = () => {
       
       {loading ? (
         <div className="p-8 text-center">
-          <FontAwesomeIcon icon={faSpinner} className="animate-spin text-accent text-2xl" />
-          <p className="mt-2 text-gray-500">Chargement des certifications...</p>
+          <Loader label="Chargement des certifications..." />
         </div>
       ) : error ? (
         <div className="p-8 text-center">

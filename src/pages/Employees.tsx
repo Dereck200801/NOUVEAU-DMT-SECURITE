@@ -4,9 +4,14 @@ import EmployeeCard from '../components/EmployeeCard';
 import type { Employee, NewEmployee } from '../types/employee';
 import EmployeeForm from '../components/EmployeeForm';
 import EmployeeDetails from '../components/EmployeeDetails';
+import agentService from '../services/agentService';
+import { useAgents } from '../context/AgentContext';
+import AgentSummary from '../components/AgentSummary';
+import type { Agent as AgentType } from '../types/agent';
 
 const Employees: React.FC = () => {
-  const { employees, add, update, remove } = useEmployees();
+  const { employees, add, update, remove, refresh } = useEmployees();
+  const { removeAgent, addAgent, refresh: refreshAgents } = useAgents();
   const [selected, setSelected] = useState<Employee | null>(null);
   const [mode, setMode] = useState<'view' | 'create' | 'edit' | null>(null);
 
@@ -26,9 +31,41 @@ const Employees: React.FC = () => {
     return matchesSearch && matchesStatus;
   });
 
+  // Helper to identify security agents
+  const isSecurityAgent = (emp: Employee) => {
+    const deptMatch = emp.department?.toLowerCase() === 'sécurité';
+    const positionMatch = /agent\s*de\s*sécurité/i.test(emp.position);
+    return deptMatch || positionMatch;
+  };
+
+  // Separate lists
+  const agentsList = filtered.filter(isSecurityAgent);
+  const otherEmployeesList = filtered.filter((e) => !isSecurityAgent(e));
+
+  const [deletingIds, setDeletingIds] = useState<Set<number>>(new Set());
+  const [showAgentSummary, setShowAgentSummary] = useState<AgentType | null>(null);
+
   const open = (m: 'view'|'create'|'edit', emp?: Employee) => {
+    if (emp && isSecurityAgent(emp) && m === 'view') {
+      // ouvrir résumé agent
+      setShowAgentSummary(emp as unknown as AgentType);
+      return;
+    }
     setSelected(emp ?? null);
     setMode(m);
+  };
+
+  const handleDelete = async (emp: Employee) => {
+    setDeletingIds((prev) => new Set(prev).add(emp.id));
+    if (isSecurityAgent(emp)) {
+      await removeAgent(emp.id);
+    }
+    await remove(emp.id);
+    setDeletingIds((prev) => {
+      const s = new Set(prev);
+      s.delete(emp.id);
+      return s;
+    });
   };
 
   return (
@@ -62,37 +99,117 @@ const Employees: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
-        {filtered.map(emp => (
-          <EmployeeCard
-            key={emp.id}
-            employee={emp}
-            onView={(e) => open('view', e)}
-            onEdit={(e) => open('edit', e)}
-            onDelete={(e) => remove(e.id)}
-          />
-        ))}
-        {filtered.length === 0 && (
-          <p className="col-span-full text-center text-gray-500 py-6">Aucun employé</p>
-        )}
+      {/* Employee grids */}
+
+      {/* Agents section */}
+      <div className="space-y-4">
+        <h2 className="text-xl font-semibold">Agents</h2>
+        <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
+          {agentsList.map((emp) => (
+            <EmployeeCard
+              key={emp.id}
+              employee={emp}
+              onView={(e) => open('view', e)}
+              onEdit={undefined}
+              onDelete={undefined}
+              isDeleting={deletingIds.has(emp.id)}
+            />
+          ))}
+          {agentsList.length === 0 && (
+            <p className="col-span-full text-center text-gray-500 py-6">Aucun agent</p>
+          )}
+        </div>
       </div>
 
-      {mode === 'view' && selected && (
+      {/* Other Employees section */}
+      <div className="space-y-4">
+        <h2 className="text-xl font-semibold">Autres employés</h2>
+        <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
+          {otherEmployeesList.map((emp) => (
+            <EmployeeCard
+              key={emp.id}
+              employee={emp}
+              onView={(e) => open('view', e)}
+              onEdit={(e) => open('edit', e)}
+              onDelete={handleDelete}
+              isDeleting={deletingIds.has(emp.id)}
+            />
+          ))}
+          {otherEmployeesList.length === 0 && (
+            <p className="col-span-full text-center text-gray-500 py-6">Aucun employé</p>
+          )}
+        </div>
+      </div>
+
+      {mode === 'view' && selected && !isSecurityAgent(selected) && (
         <EmployeeDetails
           employee={selected}
           onClose={() => setMode(null)}
           onEdit={() => open('edit', selected)}
           onDelete={() => {
-            remove(selected.id);
+            handleDelete(selected);
             setMode(null);
           }}
         />
       )}
+
+      {/* Dossier agent */}
+      {showAgentSummary && (
+        <AgentSummary agent={showAgentSummary as AgentType} onClose={() => setShowAgentSummary(null)} />
+      )}
+
       {mode === 'create' && (
         <EmployeeForm
           onCancel={() => setMode(null)}
-          onSubmit={async (data) => {
-            await add(data as NewEmployee);
+          onSubmit={async ({ employeeType, data }) => {
+            if (employeeType === 'agent') {
+              // Map minimal fields to agent structure
+              const agentPayload = {
+                name: data.name,
+                email: data.email,
+                phone: data.phone,
+                status: (data as Employee).status ?? 'active',
+                specialty: (data as Employee).position || 'Surveillance',
+                joinDate:
+                  (data as Employee).contract?.startDate || new Date().toLocaleDateString('fr-FR'),
+                documents: (data as Employee).documents,
+              } as any;
+
+              try {
+                await agentService.create(agentPayload);
+                await refreshAgents();
+              } catch (err) {
+                // Fallback: ajouter localement via contexts
+                const localId = Math.max(0, ...employees.map((e) => e.id)) + 1;
+                const localEmp: Employee = {
+                  id: localId,
+                  name: agentPayload.name,
+                  email: agentPayload.email,
+                  phone: agentPayload.phone,
+                  position: 'Agent de sécurité',
+                  department: 'Sécurité',
+                  status: agentPayload.status as any,
+                  contract: { type: 'cdi', startDate: agentPayload.joinDate, status: 'active' },
+                  leaveBalance: { annual: 0, remaining: 0 },
+                  documents: agentPayload.documents,
+                };
+                addAgent({
+                  id: localId,
+                  name: agentPayload.name,
+                  email: agentPayload.email,
+                  phone: agentPayload.phone,
+                  status: agentPayload.status,
+                  specialty: agentPayload.specialty,
+                  joinDate: agentPayload.joinDate,
+                  documents: agentPayload.documents,
+                } as any);
+                await add(localEmp as unknown as NewEmployee);
+              }
+              // Rafraîchir EmployeeContext pour refléter l'ajout
+              await Promise.all([refreshAgents(), refresh()]);
+            } else {
+              await add(data as NewEmployee);
+            }
             setMode(null);
           }}
         />
@@ -102,8 +219,13 @@ const Employees: React.FC = () => {
           employee={selected}
           isEdit
           onCancel={() => setMode(null)}
-          onSubmit={async (data) => {
-            await update(selected.id, data as Partial<Employee>);
+          onSubmit={async ({ employeeType, data }) => {
+            if (employeeType === 'agent' || isSecurityAgent(selected)) {
+              await agentService.update(selected.id, data as any);
+              await Promise.all([refreshAgents(), refresh()]);
+            } else {
+              await update(selected.id, data as Partial<Employee>);
+            }
             setMode(null);
           }}
         />

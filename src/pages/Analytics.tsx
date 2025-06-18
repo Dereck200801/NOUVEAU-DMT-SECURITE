@@ -14,11 +14,11 @@ import {
   faChartBar,
   faArrowUp,
   faArrowDown,
-  faSpinner,
 } from '@fortawesome/free-solid-svg-icons';
 // Components & services
 import PerformanceMetrics from '../components/PerformanceMetrics';
 import useMetrics from '../hooks/useMetrics';
+import Loader from '../components/ui/loader';
 
 // Register ChartJS components once
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend);
@@ -200,9 +200,8 @@ const Analytics: React.FC = () => {
       </div>
 
       {loading ? (
-        <div className="flex items-center space-x-2 text-accent">
-          <FontAwesomeIcon icon={faSpinner} className="animate-spin" />
-          <span>Chargement des données…</span>
+        <div className="flex items-center space-x-2">
+          <Loader label="Chargement des données…" />
         </div>
       ) : error ? (
         <p className="text-danger">{error}</p>

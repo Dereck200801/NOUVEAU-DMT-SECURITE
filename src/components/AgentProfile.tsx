@@ -34,6 +34,17 @@ import html2canvas from 'html2canvas';
 import { toSvg } from 'html-to-image';
 import EditableText from './ui/editableText';
 
+// Small component for info items is now defined outside to maintain stable identity
+const InfoItem: React.FC<{ icon: any; label: string; children: React.ReactNode }> = ({ icon, label, children }) => (
+  <div className="flex items-start gap-3">
+    <FontAwesomeIcon icon={icon} className="text-accent mt-0.5" />
+    <div>
+      <span className="block text-xs uppercase text-gray-400 leading-none">{label}</span>
+      <span className="block text-sm">{children}</span>
+    </div>
+  </div>
+);
+
 const AgentProfile = ({ agent: initialAgent, onClose, isNew = false }: AgentProfileProps) => {
   const [completeAgent, setCompleteAgent] = useState<Agent>(initialAgent);
   const [isModified, setIsModified] = useState(false);
@@ -182,17 +193,6 @@ const AgentProfile = ({ agent: initialAgent, onClose, isNew = false }: AgentProf
     setCompleteAgent(prev => ({ ...prev, [field]: value }));
     setIsModified(true);
   };
-
-  // Small component for info items
-  const InfoItem: React.FC<{ icon: any; label: string; children: React.ReactNode }> = ({ icon, label, children }) => (
-    <div className="flex items-start gap-3">
-      <FontAwesomeIcon icon={icon} className="text-accent mt-0.5" />
-      <div>
-        <span className="block text-xs uppercase text-gray-400 leading-none">{label}</span>
-        <span className="block text-sm">{children}</span>
-      </div>
-    </div>
-  );
 
   const validateAgent = () => {
     if (!completeAgent.name.trim()) return 'Le nom est requis';

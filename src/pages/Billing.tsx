@@ -14,7 +14,6 @@ import {
   faMoneyBillWave,
   faExclamationTriangle,
   faClock,
-  faSpinner,
   faPlus,
   faPen,
   faTrash,
@@ -26,6 +25,7 @@ import billingService from '../services/billingService';
 import type { Invoice, BillingStats } from '../types/billing';
 import InvoiceFormModal from '../components/InvoiceFormModal';
 import { exportToCsv } from '../utils/csvUtils';
+import Loader from '../components/ui/loader';
 
 // Enregistrer les composants ChartJS
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
@@ -197,9 +197,8 @@ const Billing: React.FC = () => {
 
       {/* Gestion des erreurs / chargement */}
       {loading && (
-        <div className="flex items-center space-x-2 text-accent">
-          <FontAwesomeIcon icon={faSpinner} className="animate-spin" />
-          <span>Chargement des données…</span>
+        <div className="flex items-center space-x-2">
+          <Loader label="Chargement des données…" />
         </div>
       )}
       {error && (

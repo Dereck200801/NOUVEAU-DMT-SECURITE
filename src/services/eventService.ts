@@ -1,4 +1,5 @@
 import { normalizeDate } from '../utils/dateUtils';
+import { API_BASE_URL } from '../api';
 
 // Types
 export interface Event {
@@ -36,7 +37,7 @@ export interface ApiResponse<T> {
   message?: string;
 }
 
-const API_URL = 'http://localhost:3002';
+const API_URL = API_BASE_URL;
 
 // Service
 export const eventService = {

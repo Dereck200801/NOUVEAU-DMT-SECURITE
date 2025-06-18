@@ -6,11 +6,11 @@ import {
   faUserTie,
   faCarSide,
   faSearch,
-  faSpinner,
 } from '@fortawesome/free-solid-svg-icons';
 import { useEquipments } from '../context/EquipmentContext';
 import { useEmployees } from '../context/EmployeeContext';
 import type { Equipment } from '../types/equipment';
+import Loader from './ui/loader';
 
 const EquipmentTracker: React.FC = () => {
   const { equipments } = useEquipments();
@@ -84,8 +84,7 @@ const EquipmentTracker: React.FC = () => {
       
       {loading ? (
         <div className="p-8 text-center">
-          <FontAwesomeIcon icon={faSpinner} className="animate-spin text-accent text-2xl" />
-          <p className="mt-2 text-gray-500">Chargement des équipements...</p>
+          <Loader label="Chargement des équipements..." />
         </div>
       ) : filteredEquipments.length === 0 ? (
         <div className="p-8 text-center">

@@ -14,12 +14,20 @@ export interface Report {
 }
 
 export interface ReportStats {
-  total: number;
-  draft: number;
-  published: number;
-  archived: number;
-  in_review: number;
-  finalized: number;
+  /** Nombre total de rapports pour le mois courant */
+  totalMonthly?: number;
+  /** Nombre d'incidents contenus dans les rapports */
+  incidents?: number;
+  /** Nombre de rapports finalisés */
+  finalized?: number;
+  /** Nombre de rapports actuellement en relecture */
+  inReview?: number;
+  /** Champs existants conservés pour compatibilité rétroactive */
+  total?: number;
+  draft?: number;
+  published?: number;
+  archived?: number;
+  in_review?: number;
 }
 
 export interface ReportFormProps {

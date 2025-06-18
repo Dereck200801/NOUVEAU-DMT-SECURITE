@@ -10,6 +10,7 @@ const SAMPLE_REPORTS: Report[] = [
     type: 'Mensuel',
     date: '30/11/2023',
     author: 'Admin DMT',
+    content: '',
     size: '2.4 MB',
     status: 'finalized',
     description: 'Rapport mensuel des activités et incidents pour le mois de novembre 2023'
@@ -20,6 +21,7 @@ const SAMPLE_REPORTS: Report[] = [
     type: 'Incident',
     date: '15/11/2023',
     author: 'Pierre Mbemba',
+    content: '',
     size: '1.8 MB',
     status: 'finalized',
     description: 'Rapport détaillé de l\'incident survenu le 15/11/2023 au Carrefour Mont-Bouët'
@@ -30,6 +32,7 @@ const SAMPLE_REPORTS: Report[] = [
     type: 'Évaluation',
     date: '20/11/2023',
     author: 'Jean Koumba',
+    content: '',
     size: '3.2 MB',
     status: 'in_review',
     description: 'Évaluation de la mission de protection VIP pour le Ministère de l\'Intérieur'
@@ -40,6 +43,7 @@ const SAMPLE_REPORTS: Report[] = [
     type: 'Activité',
     date: '22/11/2023',
     author: 'Marc Bivigou',
+    content: '',
     size: '1.5 MB',
     status: 'finalized',
     description: 'Rapport des activités et rondes effectuées dans la Zone Industrielle d\'Oloumi'
@@ -50,6 +54,7 @@ const SAMPLE_REPORTS: Report[] = [
     type: 'Hebdomadaire',
     date: '26/11/2023',
     author: 'Admin DMT',
+    content: '',
     size: '1.9 MB',
     status: 'finalized',
     description: 'Résumé des activités de la semaine 47 (20/11 au 26/11)'
@@ -60,6 +65,7 @@ const SAMPLE_REPORTS: Report[] = [
     type: 'Audit',
     date: '18/11/2023',
     author: 'Sophie Ndong',
+    content: '',
     size: '4.5 MB',
     status: 'in_review',
     description: 'Audit complet des mesures de sécurité en place à la BGFI Bank'
@@ -70,6 +76,7 @@ const SAMPLE_REPORTS: Report[] = [
     type: 'Formation',
     date: '05/11/2023',
     author: 'Robert Ekomi',
+    content: '',
     size: '2.1 MB',
     status: 'draft',
     description: 'Rapport sur la formation de sécurité dispensée aux employés de Total Gabon'
@@ -80,6 +87,7 @@ const SAMPLE_REPORTS: Report[] = [
     type: 'Risques',
     date: '10/11/2023',
     author: 'Marie Ondo',
+    content: '',
     size: '3.7 MB',
     status: 'finalized',
     description: 'Évaluation complète des risques de sécurité au Port de Libreville'

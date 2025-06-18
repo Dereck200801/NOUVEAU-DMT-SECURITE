@@ -208,16 +208,48 @@ const Missions = () => {
     };
 
     try {
+      let apiResp;
       if (modalType === 'create') {
-        await eventService.createEvent(dto);
+        apiResp = await eventService.createEvent(dto);
+        if (!apiResp?.success) {
+          throw new Error(apiResp?.message || 'Création via API échouée');
+        }
       } else if (modalType === 'edit' && currentMission) {
-        await eventService.updateEvent(currentMission.id, dto);
+        apiResp = await eventService.updateEvent(currentMission.id, dto);
+        if (!apiResp?.success) {
+          throw new Error(apiResp?.message || 'Mise à jour via API échouée');
+        }
       } else if (modalType === 'delete' && currentMission) {
-        await eventService.deleteEvent(currentMission.id);
+        apiResp = await eventService.deleteEvent(currentMission.id);
+        if (!apiResp?.success) {
+          throw new Error(apiResp?.message || 'Suppression via API échouée');
+        }
       }
+
       await loadMissionsFromCalendar();
     } catch (err) {
       console.error('Erreur lors de la sauvegarde de la mission', err);
+
+      // --- Fallback local : mise à jour du state sans l'API ---
+      if (modalType === 'create') {
+        const newId = Math.max(0, ...missions.map((m) => m.id)) + 1;
+        const localMission: Mission = {
+          id: newId,
+          title: dto.title,
+          client: dto.client || '',
+          location: dto.location || '',
+          startDate: dto.date,
+          endDate: dto.endDate || dto.date,
+          status: dto.status || 'pending',
+          agents: dto.agents || [],
+          description: dto.description || '',
+        };
+        setMissions((prev) => [...prev, localMission]);
+      } else if (modalType === 'edit' && currentMission) {
+        setMissions((prev) => prev.map((m) => (m.id === currentMission.id ? { ...currentMission, ...dto } : m)));
+      } else if (modalType === 'delete' && currentMission) {
+        setMissions((prev) => prev.filter((m) => m.id !== currentMission.id));
+      }
     }
 
     setShowModal(false);

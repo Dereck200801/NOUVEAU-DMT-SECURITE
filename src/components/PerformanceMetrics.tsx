@@ -5,12 +5,12 @@ import {
   faUsers, 
   faCheckCircle, 
   faExclamationTriangle,
-  faSpinner,
   faSearch,
   faSort
 } from '@fortawesome/free-solid-svg-icons';
 import { PerformanceMetric } from '../types/metrics';
 import useMetrics from '../hooks/useMetrics';
+import Loader from './ui/loader';
 
 const PerformanceMetrics: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -82,8 +82,7 @@ const PerformanceMetrics: React.FC = () => {
       
       {loading ? (
         <div className="p-8 text-center">
-          <FontAwesomeIcon icon={faSpinner} className="animate-spin text-accent text-2xl" />
-          <p className="mt-2 text-gray-500">Chargement des métriques...</p>
+          <Loader label="Chargement des métriques..." />
         </div>
       ) : error ? (
         <div className="p-8 text-center">

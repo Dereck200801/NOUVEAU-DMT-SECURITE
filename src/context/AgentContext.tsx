@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import agentService from '../services/agentService';
+import { eventService, type Event as CalendarEvent } from '../services/eventService';
 import type { Agent } from '../types/agent';
 
 interface AgentContextType {
@@ -9,12 +10,16 @@ interface AgentContextType {
   refresh: () => Promise<void>;
   /** Met à jour un agent (patch) */
   updateAgent: (id: number, data: Partial<Agent>) => Promise<void>;
+  /** Supprime un agent */
+  removeAgent: (id: number) => Promise<void>;
   /** Affecte un agent à une mission et met à jour son statut */
   assignToMission: (agentId: number, missionId: number) => Promise<void>;
   /** Détache l'agent de sa mission en cours */
   detachFromMission: (agentId: number) => Promise<void>;
   /** Synchronise les statuts en fonction des ids réellement en mission */
   reconcileStatuses: (activeAgentIds: number[]) => void;
+  /** Ajoute un agent en local (fallback) */
+  addAgent: (agent: Agent) => void;
 }
 
 const AgentContext = createContext<AgentContextType | undefined>(undefined);
@@ -22,11 +27,45 @@ const AgentContext = createContext<AgentContextType | undefined>(undefined);
 export const AgentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [agents, setAgents] = useState<Agent[]>([]);
 
-  /** Récupère les agents depuis l'API */
+  /** Met à jour la liste des agents puis synchronise leur statut en fonction des missions actives */
   const refresh = async () => {
     try {
-      const data = await agentService.getAll();
-      setAgents(data);
+      // 1. Récupérer les agents
+      const agentsFromApi = await agentService.getAll();
+
+      // 2. Récupérer les missions pour déterminer les agents actifs
+      let activeIds: number[] = [];
+      try {
+        const resp = await eventService.getEvents();
+        if (resp.success && resp.data) {
+          activeIds = (resp.data as CalendarEvent[])
+            .filter(
+              (ev) => ev.type === 'mission' && (ev.status === 'active' || ev.status === 'in_progress')
+            )
+            .flatMap((ev) => ev.agents || ev.participants?.map((p) => Number(p)) || []);
+        }
+      } catch (err) {
+        console.error('Erreur lors de la récupération des missions', err);
+      }
+
+      // 3. Mettre à jour localement le statut des agents en fonction des missions actives
+      const syncedAgents: Agent[] = agentsFromApi.map((agent) => {
+        if (activeIds.includes(agent.id)) {
+          // Doit être en mission
+          return {
+            ...agent,
+            status: 'on_mission',
+            currentMission: agent.currentMission ?? 'Mission en cours',
+          };
+        }
+        // S'assurer qu'un agent non actif n'est pas marqué "on_mission"
+        if (agent.status === 'on_mission') {
+          return { ...agent, status: 'active', currentMission: null };
+        }
+        return agent;
+      });
+
+      setAgents(syncedAgents);
     } catch (err) {
       console.error('Erreur lors du rafraîchissement des agents', err);
     }
@@ -46,6 +85,17 @@ export const AgentProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       console.error(`Impossible de mettre à jour l'agent ${id}`, err);
       // Fallback local si l'API échoue
       setAgents((prev) => prev.map((a) => (a.id === id ? { ...a, ...data } : a)));
+    }
+  };
+
+  /** Supprime un agent (API + locale) */
+  const removeAgent = async (id: number) => {
+    try {
+      await agentService.delete(id);
+    } catch (err) {
+      console.warn('Suppression agent API échouée, suppression locale', err);
+    } finally {
+      setAgents((prev) => prev.filter((a) => a.id !== id));
     }
   };
 
@@ -126,10 +176,17 @@ export const AgentProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
   };
 
+  /** Ajoute localement */
+  const addAgent = (agent: Agent) => {
+    setAgents((prev) => [...prev, agent]);
+  };
+
   const value: AgentContextType = {
     agents,
     refresh,
     updateAgent,
+    addAgent,
+    removeAgent,
     assignToMission,
     detachFromMission,
     reconcileStatuses,

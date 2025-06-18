@@ -4,7 +4,6 @@ import {
   faExclamationTriangle, 
   faSearch, 
   faSort, 
-  faSpinner, 
   faEye,
   faCalendarAlt,
   faMapMarkerAlt,
@@ -12,6 +11,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import incidentService from '../services/incidentService';
 import { Incident, IncidentFilters } from '../types/incident';
+import Loader from './ui/loader';
 
 const IncidentReports: React.FC = () => {
   const [incidents, setIncidents] = useState<Incident[]>([]);
@@ -121,8 +121,7 @@ const IncidentReports: React.FC = () => {
       
       {loading ? (
         <div className="p-8 text-center">
-          <FontAwesomeIcon icon={faSpinner} className="animate-spin text-accent text-2xl" />
-          <p className="mt-2 text-gray-500">Chargement des incidents...</p>
+          <Loader label="Chargement des incidents..." />
         </div>
       ) : error ? (
         <div className="p-8 text-center">

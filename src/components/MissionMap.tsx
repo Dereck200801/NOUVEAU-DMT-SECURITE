@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUserShield, faBuilding, faCalendarAlt, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { faUserShield, faBuilding, faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
 import locationService from '../services/locationService';
 import { MissionLocation } from '../types/location';
+import Loader from './ui/loader';
 
 // Dimensions de l'iframe carte
 const mapHeight = 400;
@@ -70,8 +71,7 @@ const MissionMap: React.FC = () => {
       
       {loading ? (
         <div className="p-8 text-center">
-          <FontAwesomeIcon icon={faSpinner} className="animate-spin text-accent text-2xl" />
-          <p className="mt-2 text-gray-500">Chargement de la carte...</p>
+          <Loader label="Chargement de la carte..." />
         </div>
       ) : error ? (
         <div className="p-8 text-center">

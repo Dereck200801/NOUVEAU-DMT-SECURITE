@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faGraduationCap, faUser, faCalendarAlt, faPlus, faSpinner, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faGraduationCap, faUser, faCalendarAlt, faPlus, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
+import Loader from './ui/loader';
 import type { Training } from '../types/training';
 import { useTrainings } from '../context/TrainingContext';
 import TrainingForm from './TrainingForm';
@@ -69,7 +70,7 @@ const TrainingsListGrid: React.FC = () => {
 
       {loading ? (
         <div className="p-8 text-center">
-          <FontAwesomeIcon icon={faSpinner} className="animate-spin text-yale-blue text-2xl" />
+          <Loader />
         </div>
       ) : error ? (
         <div className="p-6 text-center text-danger text-sm">{error}</div>
