@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [react()],
   server: {
     port: 3000,
@@ -28,5 +28,8 @@ export default defineConfig({
       '@': resolve(__dirname, 'src')
     }
   },
-  base: '/NOUVEAU-DMT-SECURITE/'
-}) 
+  // Use the custom base path only for production builds (command === 'build').
+  // During development (command === 'serve'), keep base as root to avoid
+  // Vite suggesting an alternate URL when refreshing the page.
+  base: command === 'build' ? '/NOUVEAU-DMT-SECURITE/' : '/'
+})) 
